@@ -1,0 +1,40 @@
+---
+title: "Compare branching strategies"
+shortTitle: "Branching strategies"
+navTitle: "Branching strategies"
+summary: "Trunk-based, GitHub Flow, and Git Flow compared on one timeline."
+category: "GitHub"
+order: 30
+updated: 2026-10-01
+badge: "New"
+art: "branching"
+breadcrumb:
+  - "GitHub"
+  - "Branching"
+  - "Strategies"
+---
+
+import BranchingStrategies from '/src/components/branching/BranchingStrategies.svelte';
+import Sources from '/src/components/shared/Sources.astro';
+import { SOURCES } from '/src/components/branching/data';
+
+Branching strategies are conventions for coordinating integration and release paths. They are useful shorthand, not rigid definitions or one-size-fits-all rules.
+
+<BranchingStrategies client:visible />
+
+## Good to know
+
+- Trunk-based development may still use short-lived feature branches for review, feature flags for unfinished work, and temporary release branches for some cadences.
+- GitHub Flow is intentionally lightweight: branch from main, propose changes, merge, and deploy when ready.
+- Git Flow was designed for explicitly versioned products; its author later cautioned against treating it as a dogma or default for continuous delivery web apps.
+- Tags, release branches, and deployment automation are team choices layered on top of the branching convention.
+
+## In words
+
+1. In trunk-based development, the feature is sliced into small changes that integrate to main quickly, often hidden by a feature flag until ready.
+2. In GitHub Flow, the feature stays on one branch for several days, then merges to main and deploys from there.
+3. In Git Flow, the feature branch merges to develop, then a release branch carries the stable batch to main where it is tagged.
+4. The urgent fix branches and returns quickly in every model, but Git Flow also back-merges that hotfix into develop.
+5. The best fit depends on release cadence, product support needs, test confidence, and how much unfinished work can safely live on main.
+
+<Sources sources={SOURCES} />

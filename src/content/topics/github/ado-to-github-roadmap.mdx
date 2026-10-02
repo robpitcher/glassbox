@@ -1,0 +1,45 @@
+---
+title: "Azure DevOps to GitHub migration roadmap"
+shortTitle: "ADO to GitHub roadmap"
+navTitle: "ADO to GitHub roadmap"
+category: "GitHub"
+summary: "Repos first, integrations throughout, planning when ready."
+order: 30
+updated: 2026-10-01
+badge: "New"
+art: "ado-roadmap"
+breadcrumb:
+  - "GitHub"
+  - "Migrations"
+  - "ADO to GitHub roadmap"
+---
+
+import AdoRoadmap from '/src/components/ado-roadmap/AdoRoadmap.svelte';
+import { SOURCES } from '/src/components/ado-roadmap/data';
+import Sources from '/src/components/shared/Sources.astro';
+
+This roadmap is a planning model, not a required sequence. Use the stages to decide which service is the system of record, which integrations keep teams working, and where each handoff belongs.
+
+<AdoRoadmap client:visible />
+
+## Considerations
+
+- **Identity and access:** Decide GitHub Enterprise Cloud identity, permissions, and runner/service account patterns before moving sensitive workflows.
+- **History:** GitHub Enterprise Importer migrates Git source, pull requests, and supported PR metadata; work-item history stays in Azure Boards unless you migrate planning too.
+- **Work-item links:** Keep `AB#123` style references and Azure Boards integration visible while Boards is still the planning record.
+- **Pipeline dependencies:** Inventory variables, secrets, approvals, environments, tasks, and self-hosted agents before converting pipelines.
+
+## Good to know
+
+- Some teams move CI/CD before all repositories; the right order depends on coupling and release risk.
+- Stopping at Stage 3 is a valid long-term model when Azure Boards remains the planning system.
+- Hybrid can be durable: GitHub can own code, automation, packages, and security while Azure Boards owns portfolio planning.
+
+## In words
+
+1. Move repositories to GitHub first so code and pull requests have a GitHub system of record, while Azure Pipelines and Azure Boards connect to those repositories.
+2. Move CI/CD to GitHub Actions when workflow dependencies, secrets, runner needs, approvals, and release controls are understood.
+3. Move adjacent engineering workflows such as packages and security scanning to GitHub so delivery signals sit next to the code.
+4. Optionally move planning from Azure Boards to GitHub Issues and Projects when teams are ready; this is not required for every organization.
+
+<Sources sources={SOURCES} />

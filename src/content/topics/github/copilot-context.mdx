@@ -1,0 +1,46 @@
+---
+title: "How Copilot features use context"
+shortTitle: "Copilot context"
+navTitle: "Copilot context"
+category: "GitHub"
+summary: "Completions, chat, and agents use different context and produce different kinds of help."
+badge: "New"
+art: "copilot-context"
+breadcrumb:
+  - "GitHub"
+  - "Copilot"
+  - "Context"
+updated: 2026-10-01
+---
+
+import ContextFlow from '/src/components/copilot-context/ContextFlow.svelte';
+import { SOURCES } from '/src/components/copilot-context/data';
+
+Copilot can help with the same task in very different ways. The important difference is not just the model — it is what context Copilot can see, how that context is supplied, and whether the result is a suggestion you apply or an action an agent performs for review.
+
+<ContextFlow client:visible />
+
+## Good to know
+
+- Context availability depends on the Copilot product surface, IDE support, plan, enterprise policies, repository configuration, and what you explicitly open or attach.
+- Content exclusion can prevent files from informing completions, chat responses, code review, and other Copilot features.
+- Repository custom instructions can guide supported Copilot features when configured; they do not grant access to otherwise unavailable files.
+- MCP servers and Copilot Extensions add tools or outside context only when configured, enabled by policy, and authorized for the account or repository involved.
+- Agents operate within granted repository permissions: IDE agent mode can ask before terminal commands, while Copilot cloud agent works on a branch and prepares changes for review.
+- Coding agent lifecycle — coming soon.
+
+## In words
+
+1. Completions and next edit suggestions stay closest to the editor: open files, nearby code, and current edits become inline suggestions that a person accepts or ignores.
+2. Chat can use the current file or selection automatically, then gains broader context when you attach files, point it at workspace or issue context, or configure instructions.
+3. Agent workflows use granted repository context plus configured tools to make changes, run checks, and prepare work for human review instead of only returning text.
+4. Scope always matters: Copilot sees what the product, policy, permissions, and user action make available — not every repository or every file by default.
+
+<footer class="sources">
+  <h2>Sources</h2>
+  <ul>
+    {SOURCES.map((source) => (
+      <li><a href={source.url}>{source.title}</a></li>
+    ))}
+  </ul>
+</footer>

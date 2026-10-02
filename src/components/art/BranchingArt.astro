@@ -1,0 +1,67 @@
+<div class="branching-art" aria-hidden="true">
+  <svg viewBox="0 0 286 120" focusable="false">
+    <path class="line line-main" d="M34 62H252"></path>
+    <path class="line line-feature" d="M70 62C104 24 158 24 192 62"></path>
+    <path class="line line-fix" d="M128 62C146 92 184 92 204 62"></path>
+    <circle class="dot dot-main" cx="70" cy="62" r="5"></circle>
+    <circle class="dot dot-feature" cx="192" cy="62" r="6"></circle>
+    <circle class="dot dot-fix" cx="204" cy="62" r="6"></circle>
+    <path class="diamond" d="M226 62l10-10 10 10-10 10z"></path>
+  </svg>
+</div>
+
+<style>
+  .branching-art {
+    width: min(100%, 286px);
+    height: 120px;
+    display: grid;
+    place-items: center;
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .line {
+    fill: none;
+    stroke-linecap: round;
+    stroke-width: 6;
+  }
+
+  .line-main {
+    stroke: var(--border-strong);
+  }
+
+  .line-feature {
+    stroke: var(--cc-0);
+  }
+
+  .line-fix {
+    stroke: var(--cc-2);
+  }
+
+  .dot {
+    fill: var(--surface-solid, var(--bg));
+    stroke-width: 3;
+  }
+
+  .dot-main {
+    stroke: var(--accent-2);
+  }
+
+  .dot-feature {
+    stroke: var(--cc-0);
+  }
+
+  .dot-fix {
+    stroke: var(--cc-2);
+  }
+
+  .diamond {
+    fill: color-mix(in srgb, var(--accent-2) 24%, var(--surface-solid, var(--bg)));
+    stroke: var(--accent-2);
+    stroke-linejoin: round;
+    stroke-width: 3;
+  }
+</style>

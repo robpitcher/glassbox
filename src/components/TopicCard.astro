@@ -1,5 +1,19 @@
 ---
 import BillingArt from './art/BillingArt.astro';
+import MergeGatesArt from './art/MergeGatesArt.astro';
+import HierarchyArt from './art/HierarchyArt.astro';
+import BranchingArt from './art/BranchingArt.astro';
+import CopilotContextArt from './art/CopilotContextArt.astro';
+import AdoRoadmapArt from './art/AdoRoadmapArt.astro';
+
+const ART = {
+  billing: BillingArt,
+  'merge-gates': MergeGatesArt,
+  hierarchy: HierarchyArt,
+  branching: BranchingArt,
+  'copilot-context': CopilotContextArt,
+  'ado-roadmap': AdoRoadmapArt,
+} as const;
 
 interface Props {
   href: string;
@@ -7,15 +21,16 @@ interface Props {
   summary: string;
   category: string;
   badge?: string;
-  art?: 'billing';
+  art?: keyof typeof ART;
 }
 
 const { href, title, summary, category, badge, art } = Astro.props;
+const Art = art ? ART[art] : undefined;
 ---
 
 <a class="topic-card card" href={href} data-category={category}>
   <span class="topic-card__art">
-    {art === 'billing' ? <BillingArt /> : <span class="fallback-art" aria-hidden="true"></span>}
+    {Art ? <Art /> : <span class="fallback-art" aria-hidden="true"></span>}
   </span>
   <span class="topic-card__meta">
     <span class="eyebrow">{category}</span>

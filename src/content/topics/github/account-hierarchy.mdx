@@ -1,0 +1,55 @@
+---
+title: "GitHub account and enterprise hierarchy"
+shortTitle: "Account hierarchy"
+navTitle: "Account hierarchy"
+category: "GitHub"
+summary: "Accounts → organizations → enterprises."
+badge: "New"
+art: "hierarchy"
+breadcrumb:
+  - "GitHub"
+  - "Accounts"
+  - "Hierarchy"
+order: 20
+updated: 2026-10-01
+---
+
+import AccountHierarchy from '/src/components/hierarchy/AccountHierarchy.svelte';
+import { SOURCES } from '/src/components/hierarchy/data';
+
+GitHub has three account layers: people sign in with user accounts, organizations own most shared work, and enterprises govern one or more organizations.
+
+<AccountHierarchy client:visible />
+
+## Who owns what
+
+- **User accounts** represent people. In a standard enterprise, these are personal GitHub accounts outside the enterprise.
+- **Organizations** own shared repositories, teams, projects, packages, and many day-to-day settings.
+- **Enterprise accounts** centrally govern organizations with policies, roles, billing, identity, and security controls.
+- **Managed user accounts** are different: in an EMU enterprise, the enterprise owns the user accounts provisioned from the IdP.
+
+## Good to know
+
+- EMU is an enterprise choice, not a per-organization toggle; plan it before onboarding people.
+- Outside collaborators can still be added to organization repositories in standard enterprises, but teams only contain organization members.
+- Enterprise owners govern the enterprise; organization owners still manage organization-scoped settings where enterprise policy allows.
+- Enterprise policies such as repository creation and base permissions can apply across all organizations, while organizations can only further restrict delegated settings.
+- GitHub Enterprise Cloud can run on GitHub.com or GHE.com, but the hierarchy model is the same for this visual.
+
+## In words
+
+1. A person signs in with a user account.
+2. The user joins an organization, or an IdP provisions a managed user into an EMU enterprise.
+3. The organization owns repositories such as `site` and teams such as `web-core`.
+4. A team grants access to repositories inside its own organization.
+5. The enterprise groups organizations and can enforce policies that cascade down to them.
+6. Repositories remain owned by organizations, not directly by the enterprise.
+
+<footer class="sources">
+  <h2>Sources</h2>
+  <ul>
+    {SOURCES.map((source) => (
+      <li><a href={source.url}>{source.title}</a></li>
+    ))}
+  </ul>
+</footer>

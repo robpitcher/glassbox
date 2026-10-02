@@ -1,0 +1,16 @@
+---
+interface Props {
+  sources: readonly { title: string; url: string }[];
+}
+
+const { sources } = Astro.props;
+---
+
+<footer class="sources">
+  <h2>Sources</h2>
+  <ul>
+    {sources.map((source) => (
+      <li><a href={source.url}>{source.title}</a></li>
+    ))}
+  </ul>
+</footer>

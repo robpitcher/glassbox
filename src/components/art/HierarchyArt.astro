@@ -1,0 +1,101 @@
+<div class="hierarchy-art" aria-hidden="true">
+  <svg viewBox="0 0 286 120">
+    <rect class="enterprise-frame" x="52" y="16" width="184" height="88" rx="24"></rect>
+
+    <path class="policy-line" d="M144 32v17"></path>
+    <path class="policy-line policy-line--soft" d="M144 50C116 50 103 58 95 72"></path>
+    <path class="policy-line policy-line--soft" d="M144 50c28 0 41 8 49 22"></path>
+
+    <circle class="org org--left" cx="99" cy="70" r="28"></circle>
+    <circle class="org org--right" cx="187" cy="70" r="28"></circle>
+
+    <rect class="repo repo--primary" x="85" y="55" width="14" height="14" rx="4"></rect>
+    <rect class="repo repo--secondary" x="104" y="72" width="11" height="11" rx="3"></rect>
+    <rect class="repo repo--primary" x="178" y="54" width="13" height="13" rx="4"></rect>
+    <rect class="repo repo--secondary" x="193" y="73" width="10" height="10" rx="3"></rect>
+
+    <circle class="user user--left" cx="41" cy="44" r="5"></circle>
+    <circle class="user user--left" cx="35" cy="62" r="4"></circle>
+    <circle class="user user--right" cx="249" cy="46" r="5"></circle>
+    <circle class="user user--right" cx="254" cy="64" r="4"></circle>
+
+    <path class="member-line" d="M45 47C62 49 73 56 82 64"></path>
+    <path class="member-line" d="M244 49c-17 2-28 9-37 17"></path>
+  </svg>
+</div>
+
+<style>
+  .hierarchy-art {
+    width: min(100%, 286px);
+    height: 120px;
+    display: grid;
+    place-items: center;
+  }
+
+  .hierarchy-art svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .enterprise-frame {
+    fill: var(--faint);
+    stroke: var(--border-strong);
+    stroke-width: 1.4;
+  }
+
+  .org {
+    stroke: var(--border-strong);
+    stroke-width: 1.2;
+  }
+
+  .org--left {
+    fill: var(--cc-0);
+  }
+
+  .org--right {
+    fill: var(--cc-1);
+  }
+
+  .repo {
+    stroke: var(--border-strong);
+    stroke-width: 1;
+  }
+
+  .repo--primary {
+    fill: var(--accent);
+  }
+
+  .repo--secondary {
+    fill: var(--accent-2);
+  }
+
+  .user {
+    fill: var(--cc-2);
+    stroke: var(--border-strong);
+    stroke-width: 0.9;
+  }
+
+  .user--right {
+    fill: var(--muted);
+  }
+
+  .policy-line,
+  .member-line {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+
+  .policy-line--soft,
+  .member-line {
+    stroke: var(--border-strong);
+  }
+
+  @media (max-width: 420px) {
+    .hierarchy-art {
+      width: min(100%, 260px);
+    }
+  }
+</style>

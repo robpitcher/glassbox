@@ -1,0 +1,52 @@
+---
+title: "How GitHub merge gates work"
+shortTitle: "Merge gates"
+navTitle: "Merge gates"
+category: "GitHub"
+summary: "Rulesets, checks, owners, and approvals decide whether a PR can merge."
+badge: "New"
+art: "merge-gates"
+breadcrumb:
+  - "GitHub"
+  - "Pull requests"
+  - "Merge gates"
+order: 30
+updated: 2026-10-01
+---
+
+import FactCards from '/src/components/FactCards.astro';
+import Sources from '/src/components/shared/Sources.astro';
+import MergeGateFlow from '/src/components/merge-gates/MergeGateFlow.svelte';
+import { SOURCES } from '/src/components/merge-gates/data';
+
+A pull request can merge only after every matching gate is satisfied. Those gates may come from enterprise, organization, or repository policy, so the final answer is the combined result rather than one identical setting everywhere.
+
+<MergeGateFlow client:visible />
+
+<FactCards
+  cards={[
+    { label: 'Rulesets', value: 'policy layers' },
+    { label: 'Branch protection', value: 'branch rules' },
+    { label: 'Checks', value: 'CI must pass' },
+    { label: 'Reviews', value: 'owners + approvals' },
+  ]}
+/>
+
+## Good to know
+
+- Rulesets are named, targetable policies; branch protection is the older branch-rule model. A repository can be affected by more than one matching rule.
+- Enterprise, organization, and repository rulesets layer together. When requirements overlap, the more restrictive requirement controls the merge.
+- Required checks block until the named status checks report success; merge queue can add another guarded path before the branch updates.
+- Code owner review and approval-count rules are review gates, and stale review dismissal can require fresh approvals after new commits.
+- Bypass lists can exempt trusted actors from selected rules, so a visible block may still be bypassable by someone with that permission.
+
+## In words
+
+1. GitHub matches the pull request against rulesets or branch protection for the target branch.
+2. The matching policy says which checks, code owner reviews, approval counts, conversations, or queue rules matter.
+3. CI reports required status checks, and GitHub waits for all required checks to pass.
+4. CODEOWNERS can select required reviewers for the files that changed.
+5. Review rules count valid approvals and may reset them when new commits make old reviews stale.
+6. If every matching requirement is satisfied, the PR can merge; otherwise the first unmet requirement explains the block.
+
+<Sources sources={SOURCES} />

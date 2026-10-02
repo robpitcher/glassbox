@@ -1,0 +1,135 @@
+<div class="ado-roadmap-art" aria-hidden="true">
+  <svg viewBox="0 0 286 120">
+    <defs>
+      <linearGradient id="adoRoadmapMove" x1="0" x2="1" y1="0" y2="1">
+        <stop offset="0" stop-color="var(--accent)" />
+        <stop offset="1" stop-color="var(--accent-2)" />
+      </linearGradient>
+    </defs>
+    <rect class="zone" x="11" y="14" width="112" height="92" rx="18" />
+    <rect class="zone" x="163" y="14" width="112" height="92" rx="18" />
+    <path class="link link-a" d="M108 41 C140 28, 146 28, 178 41" />
+    <path class="link link-b" d="M108 79 C140 96, 146 96, 178 79" />
+    <line class="split" x1="143" x2="143" y1="23" y2="97" />
+    <g class="tiles tiles-left">
+      <rect x="31" y="31" width="32" height="22" rx="7" />
+      <rect x="73" y="31" width="32" height="22" rx="7" />
+      <rect x="31" y="67" width="32" height="22" rx="7" />
+      <rect x="73" y="67" width="32" height="22" rx="7" />
+    </g>
+    <g class="tiles tiles-right">
+      <rect x="181" y="31" width="32" height="22" rx="7" />
+      <rect x="223" y="31" width="32" height="22" rx="7" />
+      <rect x="181" y="67" width="32" height="22" rx="7" />
+      <rect x="223" y="67" width="32" height="22" rx="7" />
+    </g>
+    <rect class="mover" x="94" y="50" width="36" height="24" rx="8" />
+    <circle class="pulse" cx="124" cy="62" r="4" />
+  </svg>
+</div>
+
+<style>
+  .ado-roadmap-art {
+    display: block;
+    width: min(100%, 286px);
+    height: 120px;
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .zone {
+    fill: color-mix(in srgb, var(--surface) 62%, transparent);
+    stroke: var(--border-strong);
+  }
+
+  .split {
+    stroke: var(--border-strong);
+    stroke-dasharray: 4 6;
+  }
+
+  .link {
+    fill: none;
+    stroke-linecap: round;
+    stroke-width: 2.4;
+  }
+
+  .link-a {
+    stroke: var(--accent-2);
+  }
+
+  .link-b {
+    stroke: var(--warn);
+    stroke-dasharray: 6 7;
+  }
+
+  .tiles rect {
+    stroke: var(--border);
+    stroke-width: 1;
+  }
+
+  .tiles-left rect {
+    fill: color-mix(in srgb, var(--surface-2) 88%, transparent);
+  }
+
+  .tiles-right rect {
+    fill: color-mix(in srgb, var(--accent) 18%, var(--surface-2));
+  }
+
+  .tiles-left rect:first-child {
+    fill: color-mix(in srgb, var(--muted) 18%, var(--surface-2));
+    opacity: 0.52;
+  }
+
+  .mover {
+    fill: url(#adoRoadmapMove);
+    filter: drop-shadow(0 10px 18px color-mix(in srgb, var(--accent) 22%, transparent));
+    animation: handoff 3.4s var(--ease) infinite;
+  }
+
+  .pulse {
+    fill: var(--on-accent);
+    animation: pulse 3.4s var(--ease) infinite;
+  }
+
+  @keyframes handoff {
+    0%,
+    15% {
+      transform: translateX(0);
+    }
+
+    58%,
+    100% {
+      transform: translateX(60px);
+    }
+  }
+
+  @keyframes pulse {
+    0%,
+    20% {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+
+    46% {
+      opacity: 1;
+      transform: scale(1.45);
+    }
+
+    72%,
+    100% {
+      opacity: 0;
+      transform: scale(2.2);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mover,
+    .pulse {
+      animation: none;
+    }
+  }
+</style>
