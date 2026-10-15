@@ -26,6 +26,21 @@ Search is indexed by Pagefind during `pnpm build`, so search results only work a
 
 `astro check` currently requires TypeScript ≤6, while this project uses TypeScript 7, so it is not part of the build validation. Use `pnpm typecheck` for TypeScript-only checks.
 
+## Local testing in the GitHub Copilot app
+
+Install Node.js 24 and pnpm 12 on Windows or macOS, matching the deployment workflow. Review and accept `.github/github-app.yml` in the app when prompted.
+
+The configuration runs **Setup** (`pnpm install --frozen-lockfile`) when a session is created. It also provides these manual commands:
+
+- **Develop** starts the live-reloading development server.
+- **Typecheck** generates Astro's types, then checks TypeScript without emitting compiled files.
+- **Build** builds the production site and Pagefind search index.
+- **Preview build** serves the most recent production build. Run **Build** first and rerun it after changes to refresh the preview.
+
+For local validation, run **Typecheck**, then **Build**, then **Preview build**. The app opens the detected server URL, including the `/visual` base path, in its browser. Use the production preview to verify navigation, interactive diagrams, and search; the development server does not build the search index.
+
+All configured commands use pnpm directly without platform-specific shell syntax and work on both Windows and macOS. Dependency installation respects your configured registry.
+
 ## Add a topic
 
 1. Create an MDX file under `src/content/topics/<category>/`, for example `src/content/topics/github/example-topic.mdx`.
