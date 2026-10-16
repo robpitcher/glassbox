@@ -166,13 +166,3 @@ export function explain(mode: ModeId, sel: Selection | null): Explanation {
           };
   }
 }
-
-export const SOURCES = [
-  { title: 'Types of GitHub accounts', url: 'https://docs.github.com/en/get-started/learning-about-github/types-of-github-accounts' },
-  { title: 'About Enterprise Managed Users', url: 'https://docs.github.com/en/enterprise-cloud@latest/admin/managing-iam/understanding-iam-for-enterprises/about-enterprise-managed-users' },
-  { title: 'Abilities and restrictions of managed user accounts', url: 'https://docs.github.com/en/enterprise-cloud@latest/admin/managing-iam/understanding-iam-for-enterprises/abilities-and-restrictions-of-managed-user-accounts' },
-  { title: 'Username considerations for external authentication', url: 'https://docs.github.com/en/enterprise-cloud@latest/admin/managing-iam/iam-configuration-reference/username-considerations-for-external-authentication' },
-  { title: 'About SAML for enterprise IAM', url: 'https://docs.github.com/en/enterprise-cloud@latest/admin/managing-iam/understanding-iam-for-enterprises/about-saml-for-enterprise-iam' },
-  { title: 'Teams in an enterprise', url: 'https://docs.github.com/en/enterprise-cloud@latest/admin/concepts/enterprise-fundamentals/teams-in-an-enterprise' },
-  { title: 'About teams', url: 'https://docs.github.com/en/organizations/organizing-members-into-teams/about-teams' },
-];

@@ -1,5 +1,5 @@
 ---
-title: "How GitHub enterprises, organizations, teams, and repositories fit together"
+title: "GitHub enterprise hierarchy"
 shortTitle: "Enterprise & org hierarchy"
 navTitle: "Enterprise hierarchy"
 category: "GitHub"
@@ -16,9 +16,6 @@ updated: 2026-10-15
 
 import FactCards from '/src/components/FactCards.astro';
 import HierarchyExplorer from '/src/components/hierarchy/HierarchyExplorer.svelte';
-import { SOURCES } from '/src/components/hierarchy/data';
-
-An enterprise owns organizations, and organizations own repositories and teams. People sit beside that tree, not above it: a user account joins an organization as a member and never owns one.
 
 <FactCards
   cards={[
@@ -46,11 +43,3 @@ An enterprise owns organizations, and organizations own repositories and teams. 
 - **Team membership.** With EMU, organization and enterprise teams can both be linked to IdP groups, so membership follows the IdP. With personal accounts, only organization teams can sync, and only with Entra ID or Okta.
 - **Reach outside the enterprise.** Managed users can't create public content or contribute outside the enterprise, and any repository they own must be private. Personal accounts keep their own public and private repositories and can join other organizations.
 
-<footer class="sources">
-  <h2>Sources</h2>
-  <ul>
-    {SOURCES.map((source) => (
-      <li><a href={source.url}>{source.title}</a></li>
-    ))}
-  </ul>
-</footer>

@@ -25,7 +25,7 @@
     initialMode?: ModeId;
   }
 
-  let { initialMode = 'personal' }: Props = $props();
+  let { initialMode = 'emu' }: Props = $props();
 
   let modeId = $state<ModeId>(initialMode);
   let selection = $state<Selection | null>(null);
