@@ -1,0 +1,15 @@
+<div class="gates-art" aria-hidden="true">
+  <span class="gate gate--0"></span>
+  <span class="gate gate--1"></span>
+  <span class="gate gate--2"></span>
+  <svg viewBox="0 0 40 16" class="check"><path d="m4 8 8 6L36 2"></path></svg>
+</div>
+
+<style>
+  .gates-art { display: flex; align-items: center; gap: 12px; height: 120px; }
+  .gate { width: 22px; height: 56px; border-radius: 6px; border: 2px solid var(--gate-color); background: color-mix(in srgb, var(--gate-color) 20%, transparent); }
+  .gate--0 { --gate-color: var(--cc-0); }
+  .gate--1 { --gate-color: var(--cc-1); }
+  .gate--2 { --gate-color: var(--cc-2); }
+  .check { width: 40px; height: 16px; fill: none; stroke: var(--ok); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+</style>
