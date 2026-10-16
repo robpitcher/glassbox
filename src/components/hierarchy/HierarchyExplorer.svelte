@@ -115,7 +115,7 @@
     if (event.key === 'Escape') selection = null;
   }
 
-  const TEAM_COLORS = ['var(--cc-2)', 'var(--accent-2)', 'var(--cc-1)', 'var(--warn)', 'var(--cc-3)'];
+  const TEAM_COLORS = ['var(--cc-2)', 'var(--cc-4)', 'var(--cc-5)', 'var(--warn)', 'var(--cc-3)'];
   const teamColor = (t: Team) => TEAM_COLORS[t.color];
   const modeIds: ModeId[] = ['emu', 'personal'];
 </script>
