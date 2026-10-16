@@ -9,7 +9,7 @@ interface Props {
 }
 
 const { title, summary, breadcrumb = [], updated } = Astro.props;
-const formatted = new Intl.DateTimeFormat('en', { month: 'long', day: 'numeric', year: 'numeric' }).format(updated);
+const formatted = new Intl.DateTimeFormat('en', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(updated);
 ---
 
 <Base title={title} description={summary}>
