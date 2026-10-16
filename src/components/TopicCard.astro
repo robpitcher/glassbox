@@ -1,6 +1,7 @@
 ---
 import BillingArt from './art/BillingArt.astro';
 import HierarchyArt from './art/HierarchyArt.astro';
+import MergeGatesArt from './art/MergeGatesArt.astro';
 
 interface Props {
   href: string;
@@ -8,7 +9,7 @@ interface Props {
   summary: string;
   category: string;
   badge?: string;
-  art?: 'billing' | 'hierarchy';
+  art?: 'billing' | 'hierarchy' | 'mergegates';
 }
 
 const { href, title, summary, category, badge, art } = Astro.props;
@@ -16,7 +17,7 @@ const { href, title, summary, category, badge, art } = Astro.props;
 
 <a class="topic-card card" href={href} data-category={category}>
   <span class="topic-card__art">
-    {art === 'billing' ? <BillingArt /> : art === 'hierarchy' ? <HierarchyArt /> : <span class="fallback-art" aria-hidden="true"></span>}
+    {art === 'billing' ? <BillingArt /> : art === 'hierarchy' ? <HierarchyArt /> : art === 'mergegates' ? <MergeGatesArt /> : <span class="fallback-art" aria-hidden="true"></span>}
   </span>
   <span class="topic-card__meta">
     <span class="eyebrow">{category}</span>

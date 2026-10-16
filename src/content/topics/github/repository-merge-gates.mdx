@@ -1,0 +1,42 @@
+---
+title: "Repository merge gates"
+shortTitle: "Repository merge gates"
+navTitle: "Merge gates"
+category: "GitHub"
+summary: "Rulesets, checks, and reviews between a pull request and merge."
+order: 120
+badge: "New"
+art: "mergegates"
+breadcrumb:
+  - "GitHub"
+  - "Repositories"
+  - "Merge gates"
+updated: 2026-10-16
+---
+
+import FactCards from '/src/components/FactCards.astro';
+import MergeGates from '/src/components/mergegates/MergeGates.svelte';
+
+<FactCards
+  cards={[
+    { label: 'Rulesets', value: 'layer, can stack' },
+    { label: 'Branch protection', value: 'per repository' },
+    { label: 'Required checks', value: 'must pass' },
+    { label: 'Reviews', value: 'approvals + owners' },
+  ]}
+/>
+
+<MergeGates client:visible />
+
+## How the controls combine
+
+- **Rulesets.** Rules for branches or tags, defined for a repository or for an organization. Several rulesets can apply to the same branch at once, and the most restrictive version of each rule wins.
+- **Branch protection.** The older per-repository rule for a branch pattern. It can apply alongside rulesets, so check both places when a merge is blocked unexpectedly.
+- **Required status checks.** A rule, not a separate feature: named checks, such as `build` and `test`, must succeed on the latest commit.
+- **Review requirements.** A rule that asks for a number of approving reviews, and optionally approval from code owners listed in the CODEOWNERS file.
+
+## Things that vary
+
+- Settings differ per repository and organization. The ruleset, check names, and approval counts above are one example, not defaults.
+- Rulesets and branch protection can let chosen roles or teams bypass them. A bypass is configured in the same place as the rule.
+- Organization-level rulesets and some options depend on your GitHub plan and repository visibility.
