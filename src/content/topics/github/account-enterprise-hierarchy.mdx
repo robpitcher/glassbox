@@ -1,0 +1,56 @@
+---
+title: "How GitHub enterprises, organizations, teams, and repositories fit together"
+shortTitle: "Enterprise & org hierarchy"
+navTitle: "Enterprise hierarchy"
+category: "GitHub"
+summary: "Enterprise → orgs → teams & repos, with EMU vs personal accounts."
+order: 110
+badge: "New"
+art: "hierarchy"
+breadcrumb:
+  - "GitHub"
+  - "Enterprise Cloud"
+  - "Hierarchy"
+updated: 2026-10-15
+---
+
+import FactCards from '/src/components/FactCards.astro';
+import HierarchyExplorer from '/src/components/hierarchy/HierarchyExplorer.svelte';
+import { SOURCES } from '/src/components/hierarchy/data';
+
+An enterprise owns organizations, and organizations own repositories and teams. People sit beside that tree, not above it: a user account joins an organization as a member and never owns one.
+
+<FactCards
+  cards={[
+    { label: 'Enterprise owns', value: 'organizations' },
+    { label: 'Organization owns', value: 'repos & teams' },
+    { label: 'Teams give members', value: 'access to repos' },
+    { label: 'People are', value: 'members, not parents' },
+  ]}
+/>
+
+<HierarchyExplorer client:visible />
+
+## Who owns each piece
+
+- **Enterprise `Acme`.** The top level. It owns the `acme-web` and `acme-data` organizations. Nobody signs in to an enterprise; enterprise owners work through their own user accounts.
+- **Organization `acme-data`.** Owned by the enterprise. It owns its repositories and teams, and people join it as members.
+- **Repository `acme-data/lake`.** Owned by the organization, which is the part before the slash. A repository always belongs to an organization or a user account, never to a team or directly to the enterprise.
+- **Team `analytics`.** Lives in `acme-data`, and only that organization's members can join it. The team gives its members access to `lake` and `etl`. Child teams inherit their parent's repository access.
+- **Enterprise team `platform`.** Owned by the enterprise and can span organizations. After it's added to an organization, that organization's admins can give it access to repositories, like `checkout` in `acme-web` and `etl` in `acme-data`. Use an organization team when the need stays within one organization; only organization teams support nesting, secret teams, and CODEOWNERS.
+
+## Managed users (EMU) vs personal accounts
+
+- **Where accounts live.** With EMU, your identity provider creates each account through SCIM, and the account belongs to the enterprise. Usernames end in the enterprise shortcode, such as `mona_acme`. With personal accounts, people sign up on GitHub.com themselves, organizations invite them in, and they keep the account if they leave.
+- **Sign-in.** EMU always signs in through the IdP, using SAML, or OIDC with Entra ID. With personal accounts, SAML SSO is optional. It links an existing account to an IdP identity but doesn't create one.
+- **Team membership.** With EMU, organization and enterprise teams can both be linked to IdP groups, so membership follows the IdP. With personal accounts, only organization teams can sync, and only with Entra ID or Okta.
+- **Reach outside the enterprise.** Managed users can't create public content or contribute outside the enterprise, and any repository they own must be private. Personal accounts keep their own public and private repositories and can join other organizations.
+
+<footer class="sources">
+  <h2>Sources</h2>
+  <ul>
+    {SOURCES.map((source) => (
+      <li><a href={source.url}>{source.title}</a></li>
+    ))}
+  </ul>
+</footer>
