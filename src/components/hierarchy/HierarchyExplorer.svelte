@@ -439,24 +439,62 @@
     grid-template-columns: 10.5rem 5.5rem minmax(0, 1fr);
   }
 
-  .is-dim {
-    opacity: 0.38;
-  }
-
   .is-lit,
   .is-selected,
   .is-dim {
-    transition: opacity var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+    transition:
+      color var(--dur) var(--ease),
+      background var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease);
   }
 
-  /* Containers never dim fully; their contents carry the signal. */
-  .enterprise.is-dim,
-  .org.is-dim {
-    opacity: 1;
-  }
-
+  /*
+    Unrelated items fade their decoration (borders, fills, color accents), never the whole
+    button, so labels keep --muted text contrast and focus outlines stay fully visible.
+  */
   .org.is-dim {
     border-color: var(--border);
+  }
+
+  .team.is-dim {
+    border-color: var(--border);
+    background: transparent;
+    color: var(--muted);
+  }
+
+  .team.is-dim .mini-avatar {
+    border-color: var(--border-strong);
+  }
+
+  .team.is-dim .avatar-glyph,
+  .person.is-dim .avatar-glyph {
+    fill: var(--muted);
+  }
+
+  .repo.is-dim {
+    border-color: var(--border);
+    background: var(--surface);
+    color: var(--muted);
+  }
+
+  .repo.is-dim .dots span {
+    background: color-mix(in srgb, var(--team) 35%, transparent);
+  }
+
+  .person.is-dim {
+    color: var(--muted);
+  }
+
+  .person.is-dim .avatar {
+    border-color: var(--border);
+    background: var(--surface);
+  }
+
+  .idp.is-dim {
+    border-color: var(--border);
+    background: transparent;
+    color: var(--muted);
   }
 
   .connector {
