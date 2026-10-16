@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "preview",
+      "runtimeExecutable": "corepack",
+      "runtimeArgs": ["pnpm", "preview", "--host", "127.0.0.1", "--port", "4321"],
+      "port": 4321
+    },
+    {
+      "name": "dev",
+      "runtimeExecutable": "corepack",
+      "runtimeArgs": ["pnpm", "dev", "--host", "127.0.0.1", "--port", "4321"],
+      "port": 4321
+    }
+  ]
+}
