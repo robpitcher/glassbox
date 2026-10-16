@@ -430,13 +430,15 @@
   /* Stage */
   .stage {
     display: grid;
-    grid-template-columns: 8.5rem 5.5rem minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     align-items: center;
+    gap: 0.6rem;
     margin-top: 1.25rem;
   }
 
-  .stage.emu {
-    grid-template-columns: 10.5rem 5.5rem minmax(0, 1fr);
+  .outside {
+    display: grid;
+    justify-items: center;
   }
 
   .is-lit,
@@ -499,9 +501,11 @@
 
   .connector {
     display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
     justify-items: center;
-    gap: 0.4rem;
-    padding: 0 0.4rem;
+    gap: 0.75rem;
+    padding: 1.1rem 0.4rem;
     color: var(--muted);
     font-size: 0.66rem;
     font-weight: 800;
@@ -510,9 +514,17 @@
     text-transform: uppercase;
   }
 
+  .connector span {
+    grid-column: 3;
+    justify-self: start;
+  }
+
   .connector svg {
-    width: 100%;
+    grid-column: 2;
+    grid-row: 1;
+    width: 2.4rem;
     height: 0.75rem;
+    transform: rotate(90deg);
     fill: none;
     stroke: var(--accent);
     stroke-width: 1.6;
@@ -531,8 +543,15 @@
   /* Accounts */
   .accounts {
     display: grid;
+    grid-template-columns: auto auto;
+    grid-template-areas:
+      'label label'
+      'repo people';
+    justify-content: center;
     justify-items: center;
+    align-items: center;
     gap: 0.6rem;
+    column-gap: 1.25rem;
     align-content: start;
   }
 
@@ -545,11 +564,14 @@
   }
 
   .accounts .column-label {
+    grid-area: label;
     text-align: center;
   }
 
   .accounts ul {
     display: grid;
+    grid-area: people;
+    grid-auto-flow: column;
     gap: 0.5rem;
     padding: 0;
     list-style: none;
@@ -601,12 +623,18 @@
   /* IdP */
   .idp {
     display: grid;
+    width: min(100%, 22rem);
+    justify-items: center;
     gap: 0.4rem;
     padding: 0.85rem;
     border: 1px dashed color-mix(in srgb, var(--cc-1) 70%, transparent);
     border-radius: var(--radius);
     background: color-mix(in srgb, var(--cc-1) 8%, transparent);
-    text-align: left;
+    text-align: center;
+  }
+
+  .idp .tag {
+    justify-self: center;
   }
 
   .idp strong {
@@ -706,10 +734,6 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 0.85rem;
     margin-top: 0.9rem;
-  }
-
-  .stage.emu .enterprise-body {
-    grid-template-columns: 7.5rem minmax(0, 1fr);
   }
 
   .orgs {
@@ -864,8 +888,9 @@
   }
 
   .user-repo {
-    width: 100%;
-    margin-top: 0.25rem;
+    grid-area: repo;
+    width: 8.5rem;
+    gap: 0.55rem;
     border-style: dashed;
     background: transparent;
   }
@@ -922,79 +947,6 @@
   }
 
   @container (max-width: 860px) {
-    .stage,
-    .stage.emu {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 0.6rem;
-    }
-
-    /* Accounts become one row: the user-owned repo sits to the left of the people. */
-    .outside {
-      display: grid;
-      justify-items: center;
-    }
-
-    .idp {
-      width: min(100%, 22rem);
-      justify-items: center;
-      text-align: center;
-    }
-
-    .idp .tag {
-      justify-self: center;
-    }
-
-    .accounts,
-    .accounts.inside {
-      grid-template-columns: auto auto;
-      grid-template-areas:
-        'label label'
-        'repo people';
-      justify-content: center;
-      align-items: center;
-      column-gap: 1.25rem;
-    }
-
-    .accounts .column-label {
-      grid-area: label;
-    }
-
-    .accounts ul {
-      grid-area: people;
-      grid-auto-flow: column;
-    }
-
-    .user-repo {
-      grid-area: repo;
-      width: 8.5rem;
-      margin-top: 0;
-      gap: 0.55rem;
-    }
-
-    /* Keep the arrow on the stage's center line; the label sits beside it. */
-    .connector {
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: 0.75rem;
-      padding-block: 1.1rem;
-    }
-
-    .connector span {
-      grid-column: 3;
-      justify-self: start;
-    }
-
-    .connector svg {
-      grid-column: 2;
-      grid-row: 1;
-      width: 2.4rem;
-      transform: rotate(90deg);
-    }
-
-    .stage.emu .enterprise-body {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
     .hint {
       margin-left: 0;
       flex-basis: 100%;
