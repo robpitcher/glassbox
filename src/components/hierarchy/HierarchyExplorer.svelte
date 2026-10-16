@@ -928,38 +928,71 @@
       gap: 0.6rem;
     }
 
-    .accounts:not(.inside) ul {
-      grid-auto-flow: column;
+    /* Accounts become one row: the user-owned repo sits to the left of the people. */
+    .outside {
+      display: grid;
+      justify-items: center;
     }
 
-    .accounts:not(.inside) {
+    .idp {
+      width: min(100%, 22rem);
+      justify-items: center;
+      text-align: center;
+    }
+
+    .idp .tag {
+      justify-self: center;
+    }
+
+    .accounts,
+    .accounts.inside {
       grid-template-columns: auto auto;
+      grid-template-areas:
+        'label label'
+        'repo people';
       justify-content: center;
       align-items: center;
-      column-gap: 1rem;
+      column-gap: 1.25rem;
     }
 
-    .accounts:not(.inside) .column-label {
-      grid-column: 1 / -1;
+    .accounts .column-label {
+      grid-area: label;
     }
 
-    .connector {
+    .accounts ul {
+      grid-area: people;
       grid-auto-flow: column;
-      justify-content: center;
+    }
+
+    .user-repo {
+      grid-area: repo;
+      width: 8.5rem;
+      margin-top: 0;
+      gap: 0.55rem;
+    }
+
+    /* Keep the arrow on the stage's center line; the label sits beside it. */
+    .connector {
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
+      gap: 0.75rem;
+      padding-block: 1.1rem;
+    }
+
+    .connector span {
+      grid-column: 3;
+      justify-self: start;
     }
 
     .connector svg {
-      width: 3rem;
+      grid-column: 2;
+      grid-row: 1;
+      width: 2.4rem;
       transform: rotate(90deg);
     }
 
     .stage.emu .enterprise-body {
       grid-template-columns: minmax(0, 1fr);
-    }
-
-    .accounts.inside ul {
-      grid-auto-flow: column;
     }
 
     .hint {
@@ -977,13 +1010,22 @@
       padding: 0.7rem;
     }
 
-    .accounts:not(.inside) {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
     .mode-toggle button {
       padding: 0.45rem 0.75rem;
       font-size: 0.82rem;
+    }
+  }
+
+  @container (max-width: 480px) {
+    .accounts,
+    .accounts.inside {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'label'
+        'people'
+        'repo';
+      justify-items: center;
+      row-gap: 0.6rem;
     }
   }
 </style>
