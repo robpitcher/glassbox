@@ -52,7 +52,7 @@
         break;
       }
       case 'outcome':
-        (outcome === 'blocked' ? failing(scenarioId) : GATES).forEach(addGate);
+        (s.id === 'blocked' ? failing(scenarioId) : GATES).forEach(addGate);
         break;
     }
     return keys;
@@ -175,7 +175,7 @@
           class="gate {tone({ kind: 'gate', id: g.id })}"
           class:fail={!ok}
           aria-pressed={selectedKey === `gate:${g.id}`}
-          aria-label={`Step ${i + 1}, ${g.name}: ${ok ? 'met' : 'not met'}. ${g.has[scenarioId]}.`}
+          aria-label={`Step ${i + 1}, ${g.name}, acted on by ${g.actor === 'human' ? 'a person' : 'automation'}: ${g.actorLabel}. ${ok ? 'Met' : 'Not met'}: ${g.has[scenarioId]}.`}
           onclick={() => select({ kind: 'gate', id: g.id })}
         >
           <span class="step">{i + 1}</span>
@@ -392,7 +392,7 @@
     padding: 0.3rem 0.65rem;
     border-radius: var(--radius-pill);
     background: color-mix(in srgb, var(--ok) 18%, transparent);
-    color: var(--ok);
+    color: var(--text);
     font-size: 0.75rem;
     font-weight: 800;
   }
@@ -483,7 +483,7 @@
     padding: 0.25rem 0.5rem;
     border-radius: 0.4rem;
     background: color-mix(in srgb, var(--cat) 18%, transparent);
-    color: var(--cat);
+    color: var(--text);
     font-size: 0.66rem;
     font-weight: 800;
     letter-spacing: 0.12em;
@@ -675,22 +675,24 @@
     align-items: flex-start;
     gap: 0.35rem;
     margin-top: auto;
-    color: var(--bad);
+    color: var(--text);
     font-size: 0.8rem;
     font-weight: 750;
     line-height: 1.3;
   }
 
-  .status.ok {
+  .status-mark {
+    flex: 0 0 auto;
+    color: var(--bad);
+  }
+
+  .status.ok .status-mark {
     color: var(--ok);
   }
 
-  .gate.is-dim .status {
+  .gate.is-dim .status,
+  .gate.is-dim .status-mark {
     color: var(--muted);
-  }
-
-  .status-mark {
-    flex: 0 0 auto;
   }
 
   /* Outcomes */

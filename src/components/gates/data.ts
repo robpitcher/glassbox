@@ -46,7 +46,7 @@ export const SOURCES: Source[] = [
     kind: 'Repo ruleset',
     name: 'protect-main',
     where: 'checkout › Settings › Rules',
-    rules: ['2 approvals', 'Code owner review', 'Check: test'],
+    rules: ['Require a pull request', '2 approvals', 'Code owner review', 'Check: test'],
     color: 1,
   },
   {
@@ -88,7 +88,7 @@ export const GATES: Gate[] = [
     name: 'Pull request',
     actor: 'human',
     actorLabel: 'kai',
-    sources: ['org-ruleset'],
+    sources: ['org-ruleset', 'repo-ruleset'],
     has: { blocked: '#42 is open', allowed: '#42 is open' },
     pass: { blocked: true, allowed: true },
   },
@@ -157,7 +157,7 @@ const SOURCE_TEXT: Record<SourceId, Explanation> = {
   },
   'repo-ruleset': {
     lead: 'Repo ruleset, set by checkout admins.',
-    text: 'It adds code owner review and the test check, and asks for 2 approvals. Rulesets don’t override each other: every rule applies, and the stricter count wins.',
+    text: 'It also requires a pull request, adds code owner review and the test check, and asks for 2 approvals. Rulesets don’t override each other: every rule applies, and the stricter count wins.',
   },
   'branch-protection': {
     lead: 'Branch protection rule on main.',
@@ -205,7 +205,7 @@ export function explain(scenario: ScenarioId, sel: Selection | null): Explanatio
   switch (g.id) {
     case 'pr':
       return {
-        lead: 'Pull request required, from the org ruleset.',
+        lead: 'Pull request required, by both rulesets.',
         text: `kai can’t push to main directly, so the change arrives as #${PULL.number} from ${PULL.head}.`,
       };
     case 'checks':
