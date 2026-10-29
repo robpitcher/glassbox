@@ -1,0 +1,50 @@
+---
+title: "Copilot access with GHEC"
+shortTitle: "Copilot access"
+navTitle: "Copilot access"
+category: "GitHub"
+summary: "$0 Copilot seats for GHEC users, $10 for everyone else."
+order: 105
+badge: "New"
+art: "copilot-access"
+breadcrumb:
+  - "GitHub"
+  - "Copilot"
+  - "Copilot access"
+updated: 2026-10-29
+---
+
+import FactCards from '/src/components/FactCards.astro';
+import SeatModelExplorer from '/src/components/copilot-access/SeatModelExplorer.svelte';
+import { withBase } from '/src/lib/url';
+
+<FactCards
+  cards={[
+    { label: 'Seat with a GHEC license', value: '$0' },
+    { label: 'Seat without one', value: '$10 Standalone' },
+    { label: 'Included AI credits', value: 'None, all metered' },
+    { label: 'Switching', value: 'Voluntary' },
+  ]}
+/>
+
+<SeatModelExplorer client:visible />
+
+## Who pays what
+
+- **`mona` and `kai` hold GHEC licenses** because they're members of the `acme-web` organization. Under Copilot access, their Copilot seat costs $0.
+- **`ray` has no GHEC license.** He gets Copilot through an enterprise team without joining an organization, so he uses Copilot Standalone at $10 per user per month.
+- **Nobody gets included AI credits.** Every request is billed as metered usage against your budgets. Copilot Business ($19, 1,900 credits) and Copilot Enterprise ($39, 3,900 credits) add each seat's credits to a shared pool first. See <a href={withBase('/github/copilot-usage-billing/')}>Copilot usage-based billing</a> for how pools and budgets work.
+- **Same features.** Copilot access gives the same features and models as Copilot Enterprise, subject to your policies.
+
+## What stays the same
+
+- **Owners still assign seats.** A GHEC license doesn't turn Copilot on. Owners assign it to members, enterprise teams, or organizations.
+- **One model per enterprise.** Copilot access can't be combined with Business or Enterprise seats, even in a single organization. The two access options, through a GHEC license or through Standalone, can mix.
+- **Budgets decide what keeps working.** If a budget runs out, code completions and next edit suggestions keep working, but features such as Chat, code review, and cloud agent need budget. Access is never removed.
+
+## Switching to Copilot access
+
+- **Voluntary.** It takes effect on the first of a month. For now, you switch through your account team; self-serve switching isn't available yet.
+- **Not for every plan.** It's not available on Free or Team plans or on self-service GHEC trials.
+- **Before you switch:** set budgets, keep the AI credits paid usage policy enabled, and allow `*.enterprise.githubcopilot.com` through your firewall.
+- **Where people sit matters.** Whether someone has a GHEC license depends on organization membership. See <a href={withBase('/github/account-enterprise-hierarchy/')}>GitHub enterprise hierarchy</a>.
