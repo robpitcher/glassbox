@@ -1,0 +1,64 @@
+---
+title: "Copilot managed settings"
+shortTitle: "Managed settings"
+navTitle: "Managed settings"
+category: "GitHub"
+summary: "Where managed-settings.json lives, who deploys it, and what it overrides."
+order: 106
+badge: "New"
+art: "managed-settings"
+breadcrumb:
+  - "GitHub"
+  - "Copilot"
+  - "Managed settings"
+updated: 2026-10-29
+---
+
+import FactCards from '/src/components/FactCards.astro';
+import ControlPlanes from '/src/components/managed-settings/ControlPlanes.svelte';
+import DeliveryMethods from '/src/components/managed-settings/DeliveryMethods.svelte';
+import WhatWins from '/src/components/managed-settings/WhatWins.svelte';
+import { withBase } from '/src/lib/url';
+
+<FactCards
+  cards={[
+    { label: 'Policy lives in', value: 'AI controls' },
+    { label: 'Client settings live in', value: 'managed-settings.json' },
+    { label: 'Delivery methods', value: 'Repository, MDM, file' },
+    { label: 'Beats user settings', value: 'For supported keys' },
+  ]}
+/>
+
+<ControlPlanes client:visible />
+
+<DeliveryMethods client:visible />
+
+<WhatWins client:visible />
+
+## Policy and client settings
+
+- **Policies decide availability.** Enterprise and organization owners, and AI managers, set them on the AI controls tab. They decide which features, agents, and models people can use. How enterprise and organization policies combine is covered in <a href={withBase('/github/copilot-policy-scope/')}>Copilot policy scope</a>.
+- **Client settings decide behavior.** `managed-settings.json` sets how supported clients act inside what policy allows: the default model, permission rules, plugins, MCP servers, and the sandbox.
+- **Supported clients:** Copilot CLI, VS Code, the GitHub Copilot app, JetBrains IDEs, and Copilot in the cloud. Not every client supports every key. For example, JetBrains doesn't support `model`, and `features.computerUse` applies only to Copilot CLI and the Copilot app. Check the supported-keys table in the docs before you rely on a key.
+
+## Where the file lives
+
+- **Server-managed:** commit `copilot/managed-settings.json` to the default branch of the `.github-private` repository in the organization you choose under AI controls, such as `acme-web`. It reaches every supported client, including Copilot in the cloud, but only for people who get their Copilot license from the enterprise or one of its organizations. Clients pick up changes within about an hour.
+- **MDM:** IT pushes the same keys as string values under `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\GitHubCopilot` on Windows, or as managed preferences for `com.github.copilot` on macOS. Linux isn't supported. Clients check about every hour without a restart.
+- **File-based:** place `managed-settings.json` at `%ProgramFiles%\GitHubCopilot\` on Windows, `/Library/Application Support/GitHubCopilot/` on macOS, or `/etc/github-copilot/` on Linux. It works in containers and Codespaces, and clients load it when they start. For Copilot CLI on macOS and Linux, the file must be owned by root, not group- or world-writable, and not a symlink.
+- **Device methods ignore the license source.** MDM and file-based settings apply to local clients for anyone who signs in on that device, but never reach Copilot in the cloud.
+
+## What wins
+
+- **Policy comes first.** If policy turns off a feature or model, no client setting can turn it back on.
+- **Then the highest source wins:** MDM, then server-managed, then file-based, then the user's own settings. Managed values take precedence over users' own client configuration for supported keys.
+- **Permission rules combine instead.** `permissions.deny`, `permissions.ask`, `permissions.allow`, and `sandbox` combine in the most restrictive direction across delivery methods.
+- **Some keys only set a default.** `model` sets the starting model. People can still choose another allowed model in each conversation, and `auto` picks from the models the enterprise allows.
+- **Some keys lock.** Setting `features.computerUse` to `false` keeps computer use off in Copilot CLI and the Copilot app, and users can't override it locally.
+
+## Rolling it out
+
+- **Validate first.** Use Copilot settings validation on the Agents tab in AI controls to check the file before people pick it up.
+- **Give enterprise teams their own values.** Mark a key as `{ "overridable": VALUE }` and map teams in `copilot/team-mappings.json` to files in `copilot/teams/`.
+- **Use device delivery for must-hold restrictions.** If Copilot CLI can't fetch server-managed settings and has nothing cached, those settings don't apply for that session. MDM or file-based delivery doesn't depend on that fetch.
+- **Force a refresh** by restarting the client or signing in again. In VS Code, the Developer: Sync Account Policy command checks MDM settings right away. To see where these checks sit in a request, see <a href={withBase('/github/copilot-request-lifecycle/')}>Copilot request lifecycle</a>.
