@@ -1,0 +1,48 @@
+/* Shared shell for every diagram island. Pair with the components in src/components/ui/. */
+
+.visual {
+  container-type: inline-size;
+  width: 100%;
+  color: var(--text);
+  background: var(--card-grad);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  box-shadow: var(--shadow);
+  padding: clamp(1.1rem, 3vw, 2rem);
+  overflow: hidden;
+}
+
+/* Control bar under the section head: a "Show" label, toggles, and an optional hint. */
+.visual-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-top: 1.5rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+/* Small uppercase label for control groups, columns, and panels. */
+.visual-label {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.visual-hint {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+@container (max-width: 860px) {
+  .visual-hint {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+}

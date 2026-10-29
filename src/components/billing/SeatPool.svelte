@@ -1,4 +1,7 @@
 <script lang="ts">
+  import InfoBar from '../ui/InfoBar.svelte';
+  import SectionHead from '../ui/SectionHead.svelte';
+  import SegmentedToggle from '../ui/SegmentedToggle.svelte';
   import { COST_CENTERS, CREDIT_USD, PLANS, TOTAL_SEATS, credits, fmt, usd, type PlanId } from './data';
 
   interface Props {
@@ -76,20 +79,21 @@
   function setPlan(next: PlanId) {
     planId = next;
   }
+
+  const planOptions = [
+    { id: 'business', label: 'Business' },
+    { id: 'enterprise', label: 'Enterprise' },
+  ] as const;
 </script>
 
 {@html '<!-- THESIS: Seat licenses dissolve into one measurable AI-credit reservoir, refusing per-user-bucket diagrams. OWN-WORLD: Midnight glass, blue/cyan gradients, translucent operational controls, and colored team compartments. STORY: A buyer sees seats fund shared credits, then optionally attributes and hard-walls shares. FIRST VIEWPORT: Badge and headline lead a control bar, then seats, conversion math, and the pool in one left-to-right mechanism. FORM: Approved Visual A billing mockup translated into responsive, interactive components. -->'}
-<section class="seat-pool" aria-labelledby="seat-pool-title">
-  <div class="heading-row">
-    <div class="badge" aria-hidden="true">1</div>
-    <div>
-      <h2 id="seat-pool-title">Seats become one shared pool of AI credits</h2>
-      <p>Each seat's price converts 1:1 into AI credits, and every seat's credits land in the same pool.</p>
-    </div>
-  </div>
+<section class="visual" aria-labelledby="seat-pool-title">
+  <SectionHead n={1} id="seat-pool-title" title="Seats become one shared pool of AI credits">
+    Each seat's price converts 1:1 into AI credits, and every seat's credits land in the same pool.
+  </SectionHead>
 
-  <div class="controls" aria-label="Seat pool controls">
-    <span class="show-label">Show</span>
+  <div class="visual-controls" aria-label="Seat pool controls">
+    <span class="visual-label show-label">Show</span>
 
     <button
       class="switch"
@@ -119,25 +123,14 @@
       <span>Apply included-usage caps</span>
     </button>
 
-    <div class="plan-tabs" role="group" aria-label="Plan">
-      <button
-        type="button"
-        class:active={planId === 'business'}
-        aria-pressed={planId === 'business'}
-        onclick={() => setPlan('business')}
-      >Business</button>
-      <button
-        type="button"
-        class:active={planId === 'enterprise'}
-        aria-pressed={planId === 'enterprise'}
-        onclick={() => setPlan('enterprise')}
-      >Enterprise</button>
+    <div class="plan">
+      <SegmentedToggle options={planOptions} value={planId} onchange={setPlan} label="Plan" stretch />
     </div>
   </div>
 
   <div class="mechanism" class:is-caps={capsOn}>
     <section class="panel seats-panel" aria-labelledby="seat-count-label">
-      <h3 id="seat-count-label">{TOTAL_SEATS} seats</h3>
+      <h3 class="visual-label" id="seat-count-label">{TOTAL_SEATS} seats</h3>
       <div class="people-grid" aria-label={`${TOTAL_SEATS} seats`}>
         {#each seats as seat (seat.key)}
           <span
@@ -170,7 +163,7 @@
     </section>
 
     <section class="panel conversion-panel" aria-labelledby="conversion-label">
-      <h3 id="conversion-label">Each seat adds</h3>
+      <h3 class="visual-label" id="conversion-label">Each seat adds</h3>
       <div class="conversion-stack">
         <div class="math-card">
           <strong>1 seat</strong>
@@ -201,7 +194,7 @@
     </div>
 
     <section class="panel pool-panel" aria-labelledby="pool-label">
-      <h3 id="pool-label">Enterprise pool · this month</h3>
+      <h3 class="visual-label" id="pool-label">Enterprise pool · this month</h3>
 
       {#if !costCentersOn}
         <div class="pool-box single-pool">
@@ -265,87 +258,10 @@
     </section>
   </div>
 
-  <div class="explainer" aria-live="polite">
-    <span class="info" aria-hidden="true">i</span>
-    <p><strong>{explainer.strong}</strong> <span>{explainer.text}</span></p>
-  </div>
+  <InfoBar lead={explainer.strong} text={explainer.text} />
 </section>
 
 <style>
-  .seat-pool {
-    container-type: inline-size;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    border-radius: calc(var(--radius) + 2px);
-    background: var(--card-grad);
-    box-shadow: var(--shadow);
-    color: var(--text);
-    font-family: var(--font-sans);
-    padding: clamp(1.25rem, 3vw, 2.25rem);
-  }
-
-  .heading-row {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 1rem;
-    align-items: start;
-  }
-
-  .badge {
-    display: grid;
-    width: 2.125rem;
-    height: 2.125rem;
-    place-items: center;
-    border-radius: var(--radius-pill);
-    background: var(--accent-grad);
-    color: var(--on-accent);
-    font-weight: 800;
-    line-height: 1;
-  }
-
-  h2,
-  h3,
-  p {
-    margin: 0;
-  }
-
-  h2 {
-    max-width: none;
-    font-size: clamp(1.42rem, 2.35vw, 1.62rem);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.16;
-  }
-
-  .heading-row p {
-    margin-top: 0.9rem;
-    max-width: 72ch;
-    color: var(--muted);
-    font-size: 0.94rem;
-    line-height: 1.55;
-  }
-
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.9rem 1.45rem;
-    align-items: center;
-    margin-top: 1.7rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--surface-2);
-    padding: 0.72rem clamp(0.85rem, 2vw, 1.4rem);
-  }
-
-  .show-label,
-  h3 {
-    color: var(--muted);
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-
   button {
     font: inherit;
   }
@@ -407,38 +323,14 @@
     transform: translateX(1.38rem);
   }
 
-  .switch:focus-visible,
-  .plan-tabs button:focus-visible {
+  .switch:focus-visible {
     outline: 2px solid var(--accent-2);
     outline-offset: 3px;
   }
 
-  .plan-tabs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+  .plan {
     min-width: min(100%, 16rem);
     margin-left: auto;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-pill);
-    background: var(--bg);
-    padding: 0.18rem;
-  }
-
-  .plan-tabs button {
-    border: 0;
-    border-radius: var(--radius-pill);
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    font-weight: 800;
-    padding: 0.43rem 1rem;
-    transition: background var(--dur) var(--ease), color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
-  }
-
-  .plan-tabs button.active {
-    background: var(--accent-grad);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--on-accent) 30%, transparent);
-    color: var(--on-accent);
   }
 
   .mechanism {
@@ -796,39 +688,6 @@
     }
   }
 
-  .explainer {
-    display: flex;
-    gap: 0.8rem;
-    align-items: flex-start;
-    margin-top: 1.55rem;
-    border-top: 1px solid var(--border);
-    padding-top: 1.15rem;
-  }
-
-  .info {
-    display: grid;
-    width: 1.35rem;
-    height: 1.35rem;
-    flex: 0 0 auto;
-    place-items: center;
-    border: 2px solid var(--accent-2);
-    border-radius: var(--radius-pill);
-    color: var(--accent-2);
-    font-size: 0.78rem;
-    font-weight: 900;
-    line-height: 1;
-  }
-
-  .explainer p {
-    color: var(--muted);
-    font-size: 0.95rem;
-    line-height: 1.45;
-  }
-
-  .explainer strong {
-    color: var(--text);
-  }
-
   * {
     box-sizing: border-box;
   }
@@ -878,19 +737,7 @@
   }
 
   @container (max-width: 620px) {
-    .seat-pool {
-      padding: 1rem;
-    }
-
-    .heading-row {
-      gap: 0.75rem;
-    }
-
-    h2 {
-      font-size: 1.35rem;
-    }
-
-    .controls {
+    .visual-controls {
       align-items: stretch;
       gap: 0.8rem;
     }
@@ -904,7 +751,7 @@
       justify-content: flex-start;
     }
 
-    .plan-tabs {
+    .plan {
       width: 100%;
       margin-left: 0;
     }
@@ -954,40 +801,19 @@
     .cap-segment:not(.compact) .lock {
       display: none;
     }
-
-    .explainer {
-      gap: 0.6rem;
-    }
   }
 
   @container (max-width: 390px) {
-    .seat-pool {
-      border-radius: var(--radius);
-      padding: 0.9rem;
-    }
-
-    .badge {
-      width: 1.85rem;
-      height: 1.85rem;
-    }
-
-    .heading-row p,
-    .caption,
-    .explainer p {
+    .caption {
       font-size: 0.82rem;
     }
 
-    .controls {
+    .visual-controls {
       padding: 0.7rem;
     }
 
     .switch {
       font-size: 0.82rem;
-    }
-
-    .plan-tabs button {
-      padding-inline: 0.45rem;
-      font-size: 0.84rem;
     }
 
     .mechanism {

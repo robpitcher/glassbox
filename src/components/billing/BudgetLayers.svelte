@@ -1,4 +1,5 @@
 <script lang="ts">
+  import SectionHead from '../ui/SectionHead.svelte';
   import {
     ENTERPRISE_BUDGET_USD,
     METERED_ORDER,
@@ -54,14 +55,10 @@
   FIRST VIEWPORT: Numbered section header above a left-to-right request path, with maximum monthly bill grounded underneath.
   FORM: Approved mockup A section 2 translated from fixed SVG into responsive semantic HTML/CSS.
 -->
-<section class="budget-layers" aria-labelledby="budget-layers-title">
-  <div class="section-head">
-    <span class="section-badge" aria-hidden="true">2</span>
-    <div>
-      <h2 id="budget-layers-title">Budgets layer on top of the pool</h2>
-      <p>Every Copilot request passes through these checks, in order. Fail one and the request is blocked.</p>
-    </div>
-  </div>
+<section class="visual" aria-labelledby="budget-layers-title">
+  <SectionHead n={2} id="budget-layers-title" title="Budgets layer on top of the pool">
+    Every Copilot request passes through these checks, in order. Fail one and the request is blocked.
+  </SectionHead>
 
   <ol class="flow" aria-label="Copilot request budget check order">
     <li class="flow-node request-node">
@@ -173,64 +170,14 @@
 </section>
 
 <style>
-  .budget-layers {
-    box-sizing: border-box;
-    container-type: inline-size;
-    width: 100%;
-    color: var(--text);
-    background: var(--card-grad);
-    border: 1px solid var(--border);
-    border-radius: calc(var(--radius) + 2px);
-    box-shadow: var(--shadow);
-    padding: clamp(1.5rem, 3vw, 2rem);
-    overflow: hidden;
-  }
-
-  .budget-layers * {
-    box-sizing: border-box;
-  }
-
-  .section-head {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: clamp(1.75rem, 3vw, 2.35rem);
-  }
-
-  .section-badge {
-    display: inline-grid;
-    flex: 0 0 auto;
-    width: 2.25rem;
-    height: 2.25rem;
-    place-items: center;
-    border-radius: var(--radius-pill);
-    background: var(--accent-grad);
-    color: var(--on-accent);
-    font-weight: 800;
-    box-shadow: 0 0.75rem 1.8rem color-mix(in srgb, var(--accent) 28%, transparent);
-  }
-
-  h2,
   h3,
   p,
   ol {
     margin: 0;
   }
 
-  h2 {
-    font-size: clamp(1.55rem, 3.4vw, 2rem);
-    line-height: 1.05;
-    letter-spacing: -0.035em;
-  }
-
-  .section-head p {
-    max-width: 74ch;
-    margin-top: 0.8rem;
-    color: var(--muted);
-    line-height: 1.55;
-  }
-
   .flow {
+    margin-top: clamp(1.75rem, 3vw, 2.35rem);
     display: grid;
     grid-template-columns: minmax(8.6rem, 0.58fr) minmax(14rem, 1.13fr) minmax(13rem, 1fr) minmax(14rem, 1.13fr);
     gap: clamp(1.35rem, 2vw, 1.75rem);
@@ -712,20 +659,6 @@
   }
 
   @media (max-width: 680px) {
-    .budget-layers {
-      padding: 1.1rem;
-      border-radius: var(--radius);
-    }
-
-    .section-head {
-      gap: 0.75rem;
-    }
-
-    .section-badge {
-      width: 2rem;
-      height: 2rem;
-    }
-
     .bill-row {
       grid-template-columns: 1fr;
     }
@@ -744,10 +677,6 @@
   }
 
   @media (max-width: 430px) {
-    .budget-layers {
-      padding: 0.9rem;
-    }
-
     .budget-row,
     .metered-list li {
       flex-direction: column;

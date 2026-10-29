@@ -1,5 +1,6 @@
 @import '@fontsource-variable/inter';
 @import './tokens.css';
+@import './visual.css';
 
 *,
 *::before,
