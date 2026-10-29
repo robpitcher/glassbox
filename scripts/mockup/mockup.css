@@ -1,0 +1,44 @@
+/*
+  Stylesheet for throwaway HTML mockups in the gitignored mockups/ folder.
+  It imports the site's real tokens and visual shell, then copies the look of the shared
+  Svelte blocks (SectionHead, SegmentedToggle, InfoBar, FactCards) as plain classes.
+  Link it from mockups/<name>.html as ../scripts/mockup/mockup.css. Start from template.html.
+*/
+@import '../../src/styles/tokens.css';
+@import '../../src/styles/visual.css';
+
+* { box-sizing: border-box; margin: 0; }
+body { padding: 40px; background: var(--bg); color: var(--text); font-family: var(--font-sans); }
+button { font: inherit; color: inherit; cursor: pointer; }
+.page { display: grid; gap: 28px; max-width: 1100px; margin: 0 auto; }
+.mock-tag { color: var(--muted); font-size: 0.8rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.mono { font-family: var(--font-mono); }
+
+/* FactCards */
+.facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.fact { padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.fact span { display: block; color: var(--muted); font-size: 0.85rem; }
+.fact b { display: block; margin-top: 4px; font-size: 1.05rem; }
+
+/* SectionHead */
+.section-head { display: flex; align-items: flex-start; gap: 1rem; }
+.section-badge { display: inline-grid; flex: none; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: var(--radius-pill); background: var(--accent-grad); color: var(--on-accent); font-weight: 800; }
+.section-head h2 { font-size: 1.9rem; letter-spacing: -0.035em; line-height: 1.05; }
+.section-head p { margin-top: 0.6rem; color: var(--muted); line-height: 1.5; }
+
+/* SegmentedToggle */
+.segmented { display: inline-flex; padding: 0.25rem; border: 1px solid var(--border); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--bg) 60%, transparent); }
+.segmented button { padding: 0.5rem 1rem; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--muted); font-size: 0.88rem; font-weight: 750; }
+.segmented button[aria-pressed='true'] { background: var(--accent-grad); color: var(--on-accent); }
+
+/* InfoBar */
+.info { display: flex; gap: 0.85rem; margin-top: 1.25rem; padding: 0.9rem 1.1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.info-icon { display: inline-grid; flex: none; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: var(--radius-pill); background: var(--accent-soft); color: var(--accent); font-size: 0.85rem; font-weight: 800; }
+.info p { color: var(--muted); line-height: 1.5; }
+.info strong { color: var(--text); }
+
+/* Common diagram bits */
+.avatar { display: inline-grid; flex: none; place-items: center; width: 2.2rem; height: 2.2rem; border: 2px solid color-mix(in srgb, var(--accent) 50%, transparent); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--accent) 22%, var(--surface-solid)); color: var(--accent); font-weight: 800; }
+.chip { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.2rem 0.6rem; border: 1px solid var(--border-strong); border-radius: var(--radius-pill); color: var(--muted); font-size: 0.75rem; font-weight: 750; white-space: nowrap; }
+.chip.ok { border-color: color-mix(in srgb, var(--ok) 45%, transparent); color: var(--ok); }
+.chip.warn { border-color: color-mix(in srgb, var(--warn) 45%, transparent); color: var(--warn); }

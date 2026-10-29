@@ -1,0 +1,53 @@
+<!doctype html>
+<!--
+  Mockup starter. Copy to mockups/<name>.html (gitignored), then run:
+    pnpm mockup-shots mockups/<name>.html "mockups/<name>.html?m=other&sel=ray"
+  Query params let one file show several states: read them in the script below.
+  Mockups are for picking a direction quickly, so plain inline JS is fine here.
+-->
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <title>Mockup</title>
+  <link rel="stylesheet" href="../scripts/mockup/mockup.css" />
+  <style>
+    /* Diagram-only styles go here. */
+    .stage { margin-top: 1.25rem; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="mock-tag">Mockup · idea name</div>
+    <section class="visual">
+      <div class="section-head">
+        <span class="section-badge">1</span>
+        <div><h2>Short heading</h2><p>One line of explanation.</p></div>
+      </div>
+      <div class="visual-controls">
+        <span class="visual-label">Show</span>
+        <div class="segmented" id="toggle">
+          <button data-m="a" aria-pressed="true">Variant A</button>
+          <button data-m="b" aria-pressed="false">Variant B</button>
+        </div>
+        <span class="visual-hint">Select a …</span>
+      </div>
+      <div class="stage" id="stage"></div>
+      <div class="info"><span class="info-icon">i</span><p id="info"></p></div>
+    </section>
+  </div>
+  <script>
+    const q = new URLSearchParams(location.search);
+    let mode = q.get('m') ?? 'a';
+    let sel = q.get('sel');
+
+    function render() {
+      document.querySelectorAll('#toggle button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.m === mode));
+      document.getElementById('stage').textContent = `Diagram for ${mode}${sel ? `, ${sel} selected` : ''}`;
+      document.getElementById('info').innerHTML = `<strong>Variant ${mode.toUpperCase()}:</strong> one-sentence explanation.`;
+    }
+
+    document.querySelectorAll('#toggle button').forEach((b) => (b.onclick = () => ((mode = b.dataset.m), render())));
+    render();
+  </script>
+</body>
+</html>

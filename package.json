@@ -10,7 +10,9 @@
     "check": "astro check",
     "astro": "astro",
     "typecheck": "astro sync && tsc --noEmit",
-    "shots": "node scripts/shots.mjs"
+    "shots": "node scripts/shots.mjs",
+    "interact": "node scripts/interact.mjs",
+    "mockup-shots": "node scripts/mockup-shots.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.1",
