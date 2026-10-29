@@ -43,7 +43,9 @@
     function render() {
       document.querySelectorAll('#toggle button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.m === mode));
       document.getElementById('stage').textContent = `Diagram for ${mode}${sel ? `, ${sel} selected` : ''}`;
-      document.getElementById('info').innerHTML = `<strong>Variant ${mode.toUpperCase()}:</strong> one-sentence explanation.`;
+      const lead = document.createElement('strong');
+      lead.textContent = `Variant ${mode.toUpperCase()}:`;
+      document.getElementById('info').replaceChildren(lead, ' one-sentence explanation.');
     }
 
     document.querySelectorAll('#toggle button').forEach((b) => (b.onclick = () => ((mode = b.dataset.m), render())));
