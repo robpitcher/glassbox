@@ -1,0 +1,51 @@
+---
+title: "Copilot request lifecycle"
+shortTitle: "Copilot request lifecycle"
+navTitle: "Request lifecycle"
+category: "GitHub"
+summary: "The five admin controls a Copilot request passes, and which one says no."
+order: 103
+badge: "New"
+art: "request-lifecycle"
+breadcrumb:
+  - "GitHub"
+  - "Copilot"
+  - "Request lifecycle"
+updated: 2026-10-29
+---
+
+import FactCards from '/src/components/FactCards.astro';
+import RequestLifecycle from '/src/components/request-lifecycle/RequestLifecycle.svelte';
+import { withBase } from '/src/lib/url';
+
+<FactCards
+  cards={[
+    { label: 'Gates on the path', value: '5' },
+    { label: 'First gate that says no', value: 'Stops the request' },
+    { label: 'Policies follow', value: 'The license source' },
+    { label: 'Inline completions', value: 'No AI credits used' },
+  ]}
+/>
+
+<RequestLifecycle client:visible />
+
+## The five gates
+
+- **Seat.** The enterprise or organization that grants a user's Copilot Business or Enterprise license decides which policies apply. With licenses from several organizations, the least restrictive policy usually wins; across several enterprises, the most restrictive one does. See <a href={withBase('/github/copilot-policy-scope/')}>Copilot policy scope</a>.
+- **Client settings.** If you deploy `managed-settings.json` (from a `.github-private` repository, MDM, or a file on the device), supported clients such as Copilot CLI, VS Code, and JetBrains IDEs enforce it. It can, for example, block any MCP server not in `allowedMcpServers`. Not every key works in every client. See <a href={withBase('/github/copilot-managed-settings/')}>Copilot managed settings</a>.
+- **Feature policy.** Enterprise owners enable or disable each feature, or let organizations decide. When organizations decide, users who get Copilot directly from the enterprise follow the "Policies for enterprise-assigned users" setting instead. New GA features follow the "Default policy for new features and clients" setting.
+- **Model access.** Each model is enabled, disabled, or follows "Default availability for released models". Preview models start disabled until an owner enables them.
+- **Credits and budgets.** Chat, Copilot CLI, cloud agent, and other features use AI credits from the included pool, then paid usage. If they're set, user-level budgets always stop usage, and other budgets stop it only when "Stop usage when budget limit is reached" is on. See <a href={withBase('/github/copilot-usage-billing/')}>Copilot usage-based billing</a>.
+
+## Reading the outcomes
+
+- **Served.** Every gate passed. AI-credit usage draws from the pool first, then is metered as paid usage if the "AI credits paid usage" policy allows it.
+- **Blocked on the device.** A client setting refused the action before it reached GitHub.
+- **Blocked by policy or model access.** The feature or model is off for the license that grants the seat.
+- **Blocked by a budget.** Usage that needs AI credits stops until the budget is raised or a new cycle starts. Inline completions and next edit suggestions keep working, and the user keeps their seat.
+
+## What this view simplifies
+
+- **Order.** Gates 1 to 4 are shown in a conceptual order. Only the budget checks have a documented sequence.
+- **Optional controls.** Managed settings and budgets are optional. Without managed settings, gate 2 doesn't apply. Without budgets, gate 5 still checks the pool and the paid usage policy.
+- **Adjacent topics.** What context a request carries is covered in [#13](https://github.com/robpitcher/visual/issues/13), and how the cloud agent runs a task is covered in [#10](https://github.com/robpitcher/visual/issues/10).

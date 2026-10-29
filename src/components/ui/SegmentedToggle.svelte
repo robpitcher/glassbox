@@ -8,12 +8,14 @@
     label?: string;
     /** Equal-width buttons that fill the available width. */
     stretch?: boolean;
+    /** Let options wrap onto a second row in narrow containers. */
+    wrap?: boolean;
   }
 
-  let { options, value, onchange, labelledby, label, stretch = false }: Props = $props();
+  let { options, value, onchange, labelledby, label, stretch = false, wrap = false }: Props = $props();
 </script>
 
-<div class="segmented" class:stretch role="group" aria-labelledby={labelledby} aria-label={labelledby ? undefined : label}>
+<div class="segmented" class:stretch class:wrap role="group" aria-labelledby={labelledby} aria-label={labelledby ? undefined : label}>
   {#each options as option (option.id)}
     <button type="button" aria-pressed={value === option.id} onclick={() => onchange(option.id)}>
       {option.label}
@@ -62,6 +64,11 @@
   }
 
   @container (max-width: 600px) {
+    .segmented.wrap {
+      flex-wrap: wrap;
+      border-radius: 1.25rem;
+    }
+
     button {
       padding: 0.45rem 0.75rem;
       font-size: 0.82rem;
