@@ -5,64 +5,20 @@
 //   pnpm shots github/copilot-usage-billing      one topic
 //   pnpm shots --out shots/before                custom output folder
 
-import { spawn } from 'node:child_process';
-import { mkdir, readdir } from 'node:fs/promises';
-import { createServer } from 'node:net';
+import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { hydrate, root, startPreview, topicSlugs } from './lib/preview.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const WIDTHS = [375, 650, 1440];
 const THEMES = ['dark', 'light'];
-
-// Always serve this checkout's dist on a free port, so another worktree's preview on 4321 can't leak in.
-const PORT = await new Promise((resolve) => {
-  const probe = createServer().listen(0, '127.0.0.1', () => {
-    const { port } = probe.address();
-    probe.close(() => resolve(port));
-  });
-});
-const BASE = `http://127.0.0.1:${PORT}/visual/`;
 
 const args = process.argv.slice(2);
 const outIndex = args.indexOf('--out');
 const outDir = path.resolve(root, outIndex >= 0 ? args.splice(outIndex, 2)[1] : 'shots');
 const slugs = args.length ? args : await topicSlugs();
 
-async function topicSlugs(dir = path.join(root, 'src/content/topics'), prefix = '') {
-  const found = [];
-  for (const entry of await readdir(dir, { withFileTypes: true })) {
-    if (entry.isDirectory()) found.push(...(await topicSlugs(path.join(dir, entry.name), `${prefix}${entry.name}/`)));
-    else if (/\.mdx?$/.test(entry.name)) found.push(prefix + entry.name.replace(/\.mdx?$/, ''));
-  }
-  return found;
-}
-
-async function reachable() {
-  try {
-    return (await fetch(BASE)).ok;
-  } catch {
-    return false;
-  }
-}
-
-async function startPreview() {
-  const astro = path.join(root, 'node_modules/astro/bin/astro.mjs');
-  // --ignore-lock keeps astro in the foreground (it backgrounds itself under agents) so server.kill() stops it.
-  const server = spawn(process.execPath, [astro, 'preview', '--ignore-lock', '--host', '127.0.0.1', '--port', String(PORT)], {
-    cwd: root,
-    stdio: 'ignore',
-  });
-  for (let i = 0; i < 60; i++) {
-    if (await reachable()) return server;
-    await new Promise((r) => setTimeout(r, 500));
-  }
-  server.kill();
-  throw new Error('astro preview did not start. Run `pnpm build` first.');
-}
-
-const server = await startPreview();
+const { base: BASE, stop } = await startPreview();
 const problems = [];
 let browser;
 
@@ -85,15 +41,7 @@ try {
           break;
         }
 
-        // Scroll through so client:visible islands hydrate before the capture.
-        await page.evaluate(async () => {
-          for (let y = 0; y < document.body.scrollHeight; y += 600) {
-            window.scrollTo(0, y);
-            await new Promise((r) => setTimeout(r, 60));
-          }
-          window.scrollTo(0, 0);
-        });
-        await page.waitForTimeout(300);
+        await hydrate(page);
 
         const overflow = await page.evaluate(() => {
           const { scrollWidth, clientWidth: limit } = document.documentElement;
@@ -116,7 +64,7 @@ try {
   }
 } finally {
   await browser?.close();
-  server.kill();
+  stop();
 }
 
 if (problems.length) {

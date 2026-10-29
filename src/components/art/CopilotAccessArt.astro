@@ -1,0 +1,88 @@
+<div class="access-art" aria-hidden="true">
+  <div class="seat seat--ok">
+    <span class="person"></span>
+    <span class="price">$0</span>
+  </div>
+  <div class="seat seat--ok">
+    <span class="person"></span>
+    <span class="price">$0</span>
+  </div>
+  <div class="seat seat--warn">
+    <span class="person"></span>
+    <span class="price">$10</span>
+  </div>
+  <div class="meter"></div>
+</div>
+
+<style>
+  .access-art {
+    display: grid;
+    grid-template-columns: repeat(3, 62px);
+    gap: 10px 12px;
+    justify-content: center;
+    width: min(100%, 286px);
+  }
+
+  .seat {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    padding: 8px 4px 6px;
+    border: 1.5px solid color-mix(in srgb, var(--seat-color) 55%, var(--border));
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--seat-color) 10%, transparent);
+  }
+
+  .seat--ok {
+    --seat-color: var(--cc-0);
+  }
+
+  .seat--warn {
+    --seat-color: var(--cc-3);
+    border-style: dashed;
+  }
+
+  .person {
+    position: relative;
+    width: 20px;
+    height: 24px;
+  }
+
+  .person::before,
+  .person::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--seat-color);
+  }
+
+  .person::before {
+    top: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-pill);
+  }
+
+  .person::after {
+    bottom: 0;
+    width: 18px;
+    height: 11px;
+    border-radius: 12px 12px 2px 2px;
+  }
+
+  .price {
+    color: var(--text);
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .meter {
+    grid-column: 1 / -1;
+    height: 12px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--warn) 70%, transparent);
+  }
+</style>
