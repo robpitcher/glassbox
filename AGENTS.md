@@ -9,6 +9,9 @@ Use pnpm (Node 24, pnpm 12). If `pnpm` isn't on PATH, run `corepack enable` once
 - `pnpm typecheck`: Astro sync, then `tsc --noEmit`. `astro check` doesn't support TypeScript 7, so don't use it.
 - `pnpm build`: production build plus the Pagefind search index.
 - `pnpm preview`: serves the last build at `http://localhost:4321/visual/`. Rebuild after every change. Search only works here, not in `pnpm dev`.
+- `pnpm shots [category/slug ...]`: after `pnpm build`, screenshots each page (or all pages) at 375, 650, and 1440px in dark and light into `shots/`, and fails if anything scrolls sideways.
+
+To add a new topic, follow the `new-topic` skill in `.github/skills/new-topic/SKILL.md`.
 
 ## Scope
 
@@ -40,6 +43,14 @@ Use pnpm (Node 24, pnpm 12). If `pnpm` isn't on PATH, run `corepack enable` once
 ## Visual design
 
 Reference implementation: `src/components/hierarchy/HierarchyExplorer.svelte` and its `data.ts`.
+
+**Shared building blocks.** Build every island from these so pages match. Don't restyle frames, headings, toggles, or info bars locally.
+
+- `<section class="visual">`: the card frame. It's a container, so use `@container` queries inside it.
+- `SectionHead` (`src/components/ui/`): the numbered badge, heading, and one-line description.
+- `.visual-controls` holding `.visual-label`, a `SegmentedToggle`, and an optional `.visual-hint`.
+- `.visual-label`: small uppercase captions, such as column or panel labels.
+- `InfoBar`: the single `aria-live` explanation under the visual.
 
 **Pick the pattern that matches the issue:**
 
@@ -87,8 +98,8 @@ The home page and sidebar pick the page up automatically.
 ## Before showing work or opening a PR
 
 1. `pnpm typecheck` and `pnpm build` pass.
-2. In `pnpm preview`, check the page at 375px, about 650px (where layouts switch to one column), and 1440px wide.
-3. Check every toggle state, and both the light and dark themes.
+2. `pnpm shots <category/slug>` passes. Open its screenshots at 375px, about 650px (where layouts switch to one column), and 1440px, in both themes, next to the hierarchy page's, and fix anything that looks different.
+3. Check every toggle state.
 4. At every width, nothing scrolls sideways and connectors line up with the boxes they join.
 5. Select at least one item of each kind by keyboard and confirm the highlights and info bar.
 6. Confirm the page appears on the home page and in the sidebar.
