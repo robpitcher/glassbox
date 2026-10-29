@@ -1,0 +1,43 @@
+---
+title: "Repository merge gates"
+shortTitle: "Repository merge gates"
+navTitle: "Merge gates"
+category: "GitHub"
+summary: "Rulesets, checks, and reviews that allow or block a merge."
+order: 120
+badge: "New"
+art: "mergegates"
+breadcrumb:
+  - "GitHub"
+  - "Repositories"
+  - "Merge gates"
+updated: 2026-10-16
+---
+
+import FactCards from '/src/components/FactCards.astro';
+import MergeGates from '/src/components/mergegates/MergeGates.svelte';
+
+<FactCards
+  cards={[
+    { label: 'Rules come from', value: 'rulesets + protection' },
+    { label: 'Several can apply', value: 'all must be met' },
+    { label: 'Checks are', value: 'automated gates' },
+    { label: 'Reviews are', value: 'human gates' },
+  ]}
+/>
+
+<MergeGates client:visible />
+
+## How the gates combine
+
+- **Rulesets.** Named rule sets that target branches or tags, defined on a repository or on an organization to cover many repositories. They have an enforcement status (active or evaluate) and an optional bypass list.
+- **Branch protection rules.** The older, per-repository setting for a branch pattern such as `main`. It can sit next to rulesets.
+- **They stack.** When a branch is covered by several rulesets and protection rules, the most restrictive result applies, so any unmet requirement blocks the merge.
+- **Required status checks.** Automated results, such as a GitHub Actions job. A required check must pass before merging.
+- **Review requirements.** An approval count, and optionally a review from code owners named in a `CODEOWNERS` file. An approval from someone who is not an owner satisfies the count but not the code owner rule.
+
+## Variations to expect
+
+- Repositories differ: some use only branch protection, some only rulesets, and the numbers (approvals, checks) are chosen per repository or organization.
+- Rulesets in evaluate mode report what would be blocked without enforcing it, and users on a bypass list can merge past the rules.
+- Which rules and settings you can use depends on your plan and repository visibility. This page shows one illustrative setup.
