@@ -49,7 +49,8 @@ async function reachable() {
 
 async function startPreview() {
   const astro = path.join(root, 'node_modules/astro/bin/astro.mjs');
-  const server = spawn(process.execPath, [astro, 'preview', '--host', '127.0.0.1', '--port', String(PORT)], {
+  // --ignore-lock keeps astro in the foreground (it backgrounds itself under agents) so server.kill() stops it.
+  const server = spawn(process.execPath, [astro, 'preview', '--ignore-lock', '--host', '127.0.0.1', '--port', String(PORT)], {
     cwd: root,
     stdio: 'ignore',
   });
@@ -62,10 +63,11 @@ async function startPreview() {
 }
 
 const server = await startPreview();
-const browser = await chromium.launch();
 const problems = [];
+let browser;
 
 try {
+  browser = await chromium.launch();
   for (const slug of slugs) {
     const folder = path.join(outDir, slug.replaceAll('/', '__'));
     await mkdir(folder, { recursive: true });
@@ -94,13 +96,14 @@ try {
         await page.waitForTimeout(300);
 
         const overflow = await page.evaluate(() => {
-          const limit = document.documentElement.clientWidth;
-          if (document.documentElement.scrollWidth <= limit) return [];
-          return [...document.querySelectorAll('main *')]
+          const { scrollWidth, clientWidth: limit } = document.documentElement;
+          if (scrollWidth <= limit) return [];
+          const culprits = [...document.querySelectorAll('main *')]
             .filter((el) => el.getBoundingClientRect().right > limit + 1)
             .filter((el) => !el.parentElement || el.parentElement.getBoundingClientRect().right <= limit + 1)
             .slice(0, 5)
             .map((el) => `${el.tagName.toLowerCase()}${el.className ? '.' + String(el.className).trim().split(/\s+/).join('.') : ''}`);
+          return culprits.length ? culprits : [`document (scrollWidth ${scrollWidth} > clientWidth ${limit})`];
         });
         if (overflow.length) problems.push(`${slug} @ ${width}px ${theme}: horizontal scroll from ${overflow.join(', ')}`);
 
@@ -112,7 +115,7 @@ try {
     }
   }
 } finally {
-  await browser.close();
+  await browser?.close();
   server.kill();
 }
 
