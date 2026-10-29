@@ -1,4 +1,7 @@
 <script lang="ts">
+  import InfoBar from '../ui/InfoBar.svelte';
+  import SectionHead from '../ui/SectionHead.svelte';
+  import SegmentedToggle from '../ui/SegmentedToggle.svelte';
   import {
     ENTERPRISE,
     MODES,
@@ -117,7 +120,7 @@
 
   const TEAM_COLORS = ['var(--cc-2)', 'var(--cc-4)', 'var(--cc-5)', 'var(--warn)', 'var(--cc-3)'];
   const teamColor = (t: Team) => TEAM_COLORS[t.color];
-  const modeIds: ModeId[] = ['emu', 'personal'];
+  const modeOptions = (['emu', 'personal'] as const).map((id) => ({ id, label: MODES[id].label }));
 </script>
 
 <!--
@@ -154,7 +157,7 @@
 
 {#snippet accounts()}
   <div class="accounts" class:inside={emu} role="group" aria-label={emu ? 'Managed user accounts' : 'Personal accounts'}>
-    <p class="column-label">{emu ? 'Managed users' : 'Personal accounts'}</p>
+    <p class="visual-label column-label">{emu ? 'Managed users' : 'Personal accounts'}</p>
     <ul>
       {#each USERS as user (user)}
         <li>
@@ -185,25 +188,15 @@
   </div>
 {/snippet}
 
-<section class="hierarchy" aria-labelledby="hierarchy-title" {onkeydown}>
-  <div class="section-head">
-    <span class="section-badge" aria-hidden="true">1</span>
-    <div>
-      <h2 id="hierarchy-title">Who owns what</h2>
-      <p>Enterprises own orgs. Orgs own repos and teams. Teams give their members access to repos.</p>
-    </div>
-  </div>
+<section class="visual" aria-labelledby="hierarchy-title" {onkeydown}>
+  <SectionHead n={1} id="hierarchy-title" title="Who owns what">
+    Enterprises own orgs. Orgs own repos and teams. Teams give their members access to repos.
+  </SectionHead>
 
-  <div class="controls">
-    <span class="show-label" id="hierarchy-mode-label">Show</span>
-    <div class="mode-toggle" role="group" aria-labelledby="hierarchy-mode-label">
-      {#each modeIds as id (id)}
-        <button type="button" class:active={modeId === id} aria-pressed={modeId === id} onclick={() => setMode(id)}>
-          {MODES[id].label}
-        </button>
-      {/each}
-    </div>
-    <span class="hint">Select a team, repo, or person</span>
+  <div class="visual-controls">
+    <span class="visual-label" id="hierarchy-mode-label">Show</span>
+    <SegmentedToggle options={modeOptions} value={modeId} onchange={setMode} labelledby="hierarchy-mode-label" />
+    <span class="visual-hint">Select a team, repo, or person</span>
   </div>
 
   <div class="stage" class:emu class:has-selection={selection !== null}>
@@ -244,7 +237,7 @@
           <strong>{ENTERPRISE.name}</strong>
         </button>
         <div class="enterprise-teams">
-          <span class="column-label">Enterprise team</span>
+          <span class="visual-label">Enterprise team</span>
           {#each TEAMS.filter((t) => !t.org) as t (t.id)}{@render teamPill(t)}{/each}
         </div>
       </div>
@@ -295,39 +288,10 @@
     </div>
   </div>
 
-  <div class="info" aria-live="polite" aria-atomic="true">
-    <span class="info-icon" aria-hidden="true">i</span>
-    <div>
-      <p><strong>{info.lead}</strong> {info.text}</p>
-      {#if info.note}<p class="info-note">{info.note}</p>{/if}
-    </div>
-  </div>
+  <InfoBar lead={info.lead} text={info.text} note={info.note} />
 </section>
 
 <style>
-  .hierarchy {
-    box-sizing: border-box;
-    container-type: inline-size;
-    width: 100%;
-    color: var(--text);
-    background: var(--card-grad);
-    border: 1px solid var(--border);
-    border-radius: calc(var(--radius) + 2px);
-    box-shadow: var(--shadow);
-    padding: clamp(1.1rem, 3vw, 2rem);
-    overflow: hidden;
-  }
-
-  .hierarchy * {
-    box-sizing: border-box;
-  }
-
-  h2,
-  p,
-  ul {
-    margin: 0;
-  }
-
   button {
     font: inherit;
     color: inherit;
@@ -339,104 +303,18 @@
     outline-offset: 2px;
   }
 
-  .section-head {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .section-badge {
-    display: inline-grid;
-    flex: 0 0 auto;
-    width: 2.25rem;
-    height: 2.25rem;
-    place-items: center;
-    border-radius: var(--radius-pill);
-    background: var(--accent-grad);
-    color: var(--on-accent);
-    font-weight: 800;
-    box-shadow: 0 0.75rem 1.8rem color-mix(in srgb, var(--accent) 28%, transparent);
-  }
-
-  h2 {
-    font-size: clamp(1.45rem, 3.4vw, 2rem);
-    line-height: 1.05;
-    letter-spacing: -0.035em;
-  }
-
-  .section-head p {
-    max-width: 74ch;
-    margin-top: 0.7rem;
-    color: var(--muted);
-    line-height: 1.55;
-  }
-
-  /* Controls */
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem 1rem;
-    margin-top: 1.5rem;
-    padding: 0.7rem 1rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--surface);
-  }
-
-  .show-label,
-  .column-label {
-    color: var(--muted);
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-
-  .mode-toggle {
-    display: inline-flex;
-    padding: 0.25rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-pill);
-    background: color-mix(in srgb, var(--bg) 60%, transparent);
-  }
-
-  .mode-toggle button {
-    padding: 0.5rem 1rem;
-    border: 0;
-    border-radius: var(--radius-pill);
-    background: transparent;
-    color: var(--muted);
-    font-size: 0.88rem;
-    font-weight: 750;
-    transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
-  }
-
-  .mode-toggle button:hover {
-    color: var(--text);
-  }
-
-  .mode-toggle button.active {
-    background: var(--accent-grad);
-    color: var(--on-accent);
-  }
-
-  .hint {
-    margin-left: auto;
-    color: var(--muted);
-    font-size: 0.85rem;
-  }
-
   /* Stage */
   .stage {
     display: grid;
-    grid-template-columns: 8.5rem 5.5rem minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     align-items: center;
+    gap: 0.6rem;
     margin-top: 1.25rem;
   }
 
-  .stage.emu {
-    grid-template-columns: 10.5rem 5.5rem minmax(0, 1fr);
+  .outside {
+    display: grid;
+    justify-items: center;
   }
 
   .is-lit,
@@ -499,9 +377,11 @@
 
   .connector {
     display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
     justify-items: center;
-    gap: 0.4rem;
-    padding: 0 0.4rem;
+    gap: 0.75rem;
+    padding: 1.1rem 0.4rem;
     color: var(--muted);
     font-size: 0.66rem;
     font-weight: 800;
@@ -510,9 +390,17 @@
     text-transform: uppercase;
   }
 
+  .connector span {
+    grid-column: 3;
+    justify-self: start;
+  }
+
   .connector svg {
-    width: 100%;
+    grid-column: 2;
+    grid-row: 1;
+    width: 2.4rem;
     height: 0.75rem;
+    transform: rotate(90deg);
     fill: none;
     stroke: var(--accent);
     stroke-width: 1.6;
@@ -531,8 +419,15 @@
   /* Accounts */
   .accounts {
     display: grid;
+    grid-template-columns: auto auto;
+    grid-template-areas:
+      'label label'
+      'repo people';
+    justify-content: center;
     justify-items: center;
+    align-items: center;
     gap: 0.6rem;
+    column-gap: 1.25rem;
     align-content: start;
   }
 
@@ -545,11 +440,14 @@
   }
 
   .accounts .column-label {
+    grid-area: label;
     text-align: center;
   }
 
   .accounts ul {
     display: grid;
+    grid-area: people;
+    grid-auto-flow: column;
     gap: 0.5rem;
     padding: 0;
     list-style: none;
@@ -601,12 +499,18 @@
   /* IdP */
   .idp {
     display: grid;
+    width: min(100%, 22rem);
+    justify-items: center;
     gap: 0.4rem;
     padding: 0.85rem;
     border: 1px dashed color-mix(in srgb, var(--cc-1) 70%, transparent);
     border-radius: var(--radius);
     background: color-mix(in srgb, var(--cc-1) 8%, transparent);
-    text-align: left;
+    text-align: center;
+  }
+
+  .idp .tag {
+    justify-self: center;
   }
 
   .idp strong {
@@ -706,10 +610,6 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 0.85rem;
     margin-top: 0.9rem;
-  }
-
-  .stage.emu .enterprise-body {
-    grid-template-columns: 7.5rem minmax(0, 1fr);
   }
 
   .orgs {
@@ -864,8 +764,9 @@
   }
 
   .user-repo {
-    width: 100%;
-    margin-top: 0.25rem;
+    grid-area: repo;
+    width: 8.5rem;
+    gap: 0.55rem;
     border-style: dashed;
     background: transparent;
   }
@@ -881,126 +782,6 @@
     font-weight: 700;
   }
 
-  /* Info bar */
-  .info {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.85rem;
-    margin-top: 1.25rem;
-    padding: 0.9rem 1.1rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--surface);
-  }
-
-  .info-icon {
-    display: inline-grid;
-    flex: 0 0 auto;
-    width: 1.6rem;
-    height: 1.6rem;
-    place-items: center;
-    border-radius: var(--radius-pill);
-    background: var(--accent-soft);
-    color: var(--accent);
-    font-size: 0.85rem;
-    font-weight: 800;
-  }
-
-  .info p {
-    color: var(--muted);
-    font-size: 0.95rem;
-    line-height: 1.5;
-  }
-
-  .info strong {
-    color: var(--text);
-  }
-
-  .info .info-note {
-    margin-top: 0.3rem;
-    font-size: 0.86rem;
-  }
-
-  @container (max-width: 860px) {
-    .stage,
-    .stage.emu {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 0.6rem;
-    }
-
-    /* Accounts become one row: the user-owned repo sits to the left of the people. */
-    .outside {
-      display: grid;
-      justify-items: center;
-    }
-
-    .idp {
-      width: min(100%, 22rem);
-      justify-items: center;
-      text-align: center;
-    }
-
-    .idp .tag {
-      justify-self: center;
-    }
-
-    .accounts,
-    .accounts.inside {
-      grid-template-columns: auto auto;
-      grid-template-areas:
-        'label label'
-        'repo people';
-      justify-content: center;
-      align-items: center;
-      column-gap: 1.25rem;
-    }
-
-    .accounts .column-label {
-      grid-area: label;
-    }
-
-    .accounts ul {
-      grid-area: people;
-      grid-auto-flow: column;
-    }
-
-    .user-repo {
-      grid-area: repo;
-      width: 8.5rem;
-      margin-top: 0;
-      gap: 0.55rem;
-    }
-
-    /* Keep the arrow on the stage's center line; the label sits beside it. */
-    .connector {
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: 0.75rem;
-      padding-block: 1.1rem;
-    }
-
-    .connector span {
-      grid-column: 3;
-      justify-self: start;
-    }
-
-    .connector svg {
-      grid-column: 2;
-      grid-row: 1;
-      width: 2.4rem;
-      transform: rotate(90deg);
-    }
-
-    .stage.emu .enterprise-body {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .hint {
-      margin-left: 0;
-      flex-basis: 100%;
-    }
-  }
-
   @container (max-width: 600px) {
     .orgs {
       grid-template-columns: minmax(0, 1fr);
@@ -1008,11 +789,6 @@
 
     .enterprise {
       padding: 0.7rem;
-    }
-
-    .mode-toggle button {
-      padding: 0.45rem 0.75rem;
-      font-size: 0.82rem;
     }
   }
 

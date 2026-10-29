@@ -5,3 +5,5 @@ dist/
 *.log
 .env
 .impeccable/
+shots/
+mockups/

@@ -9,10 +9,15 @@ Use pnpm (Node 24, pnpm 12). If `pnpm` isn't on PATH, run `corepack enable` once
 - `pnpm typecheck`: Astro sync, then `tsc --noEmit`. `astro check` doesn't support TypeScript 7, so don't use it.
 - `pnpm build`: production build plus the Pagefind search index.
 - `pnpm preview`: serves the last build at `http://localhost:4321/visual/`. Rebuild after every change. Search only works here, not in `pnpm dev`.
+- `pnpm shots [category/slug ...]`: after `pnpm build`, screenshots each page (or all pages) at 375, 650, and 1440px in dark and light into `shots/`, and fails if anything scrolls sideways.
+- `pnpm interact [category/slug ...]`: after `pnpm build`, presses Enter on every selectable item in every `.visual` section and toggle state. It fails unless the item becomes `aria-pressed`, the info bar changes, and Esc resets both. It also saves one screenshot per section and state as `shots/<slug>/interact-*.png`.
+- `pnpm mockup-shots mockups/<name>.html["?query"] ...`: screenshots throwaway HTML mockups in dark and light. Mockups live in the gitignored `mockups/` folder; start from `scripts/mockup/template.html`, which links `scripts/mockup/mockup.css` (the real tokens plus look-alike shared blocks).
+
+To add a new topic, follow the `new-topic` skill in `.github/skills/new-topic/SKILL.md`.
 
 ## Scope
 
-- One idea per page. Each issue's "Page scope" is the boundary. If the work starts covering an adjacent concept, link to that topic's page or issue instead of explaining it. If no issue exists, propose one rather than expanding the page.
+- One idea per page. Each issue's "Page scope" is the boundary. If the work comes from a request with no issue, the request is the scope; don't create an issue for it. If the work starts covering an adjacent concept, link to that topic's page or issue instead of explaining it. If no issue exists, propose one rather than expanding the page.
 - Many topics are adjacent, for example Actions execution (#9) and Actions security (#6), or the security overview (#14) and its detail pages (#4, #7, #11). Cross-link them, and keep the overlap to a sentence.
 - Use one concrete example and note important variations. Never build an exhaustive settings or permissions matrix.
 - Cover GitHub.com / Enterprise Cloud. Mention GitHub Enterprise Server only when the difference is essential.
@@ -32,6 +37,8 @@ Use pnpm (Node 24, pnpm 12). If `pnpm` isn't on PATH, run `corepack enable` once
   - `summary`: one line for the card.
   - `updated`: today's date.
   - `breadcrumb`, `order`, `badge`, and `art` as needed.
+  - `badge: "New"` marks recent topics. When you touch the topics, check when each badged page was added (`git log --diff-filter=A --format=%ad -- <file>.mdx`). If it was more than a month ago, suggest removing the badge, but don't remove it without asking.
+- **Links between topics** in MDX: `import { withBase } from '/src/lib/url';` and write `<a href={withBase('/github/<slug>/')}>`. Never hard-code `/visual/` or use a root-relative Markdown link.
 - **No intro paragraph** under the title. Open with `FactCards` (4 short label/value pairs), then the visual.
 - **Visual sections** are cards with a numbered badge, a short heading, and one line of explanation (see `HierarchyExplorer.svelte`).
 - **After the visual**, add short `##` sections with bulleted explanations. These must make sense without JavaScript, because they are the noninteractive version of the visual.
@@ -40,6 +47,14 @@ Use pnpm (Node 24, pnpm 12). If `pnpm` isn't on PATH, run `corepack enable` once
 ## Visual design
 
 Reference implementation: `src/components/hierarchy/HierarchyExplorer.svelte` and its `data.ts`.
+
+**Shared building blocks.** Build every island from these so pages match. Don't restyle frames, headings, toggles, or info bars locally.
+
+- `<section class="visual">`: the card frame. It's a container, so use `@container` queries inside it.
+- `SectionHead` (`src/components/ui/`): the numbered badge, heading, and one-line description.
+- `.visual-controls` holding `.visual-label`, a `SegmentedToggle`, and an optional `.visual-hint`.
+- `.visual-label`: small uppercase captions, such as column or panel labels.
+- `InfoBar`: the single `aria-live` explanation under the visual.
 
 **Pick the pattern that matches the issue:**
 
@@ -61,6 +76,7 @@ Reference implementation: `src/components/hierarchy/HierarchyExplorer.svelte` an
 - One `aria-live` info bar under the visual explains the current selection in one sentence: bold lead, plain rest.
 - When there's a toggle, default to the richer or more common variant. For example, the hierarchy page opens on EMU.
 - The server-rendered default state must make sense before hydration.
+- Animate only `transform`, `opacity` (on decorative layers, never on buttons or text), and `clip-path`. Don't animate `width`, `height`, `padding`, or `margin`, because they cause layout thrash, and the impeccable design hook flags them. For example, reveal a bar with `clip-path: inset(0 X% 0 0)` rather than by growing its width. Respect `prefers-reduced-motion`.
 
 **Content and color:**
 
@@ -75,6 +91,7 @@ Reference implementation: `src/components/hierarchy/HierarchyExplorer.svelte` an
 - Organizations `acme-web` and `acme-data`.
 - People `mona`, `kai`, and `ray`.
 - Repositories `checkout`, `app`, `docs`, `lake`, `models`, and `etl`.
+- Keep the cast consistent with licensing. Every organization member holds a GitHub Enterprise license, so someone who must be unlicensed, such as `ray` on a Copilot-only seat, sits in an enterprise team, never inside an organization. Label organizations and enterprise teams so readers can tell them apart.
 
 ## Adding a topic: files to touch
 
@@ -87,14 +104,14 @@ The home page and sidebar pick the page up automatically.
 ## Before showing work or opening a PR
 
 1. `pnpm typecheck` and `pnpm build` pass.
-2. In `pnpm preview`, check the page at 375px, about 650px (where layouts switch to one column), and 1440px wide.
-3. Check every toggle state, and both the light and dark themes.
+2. `pnpm shots <category/slug>` passes. Open its screenshots at 375px, about 650px (where layouts switch to one column), and 1440px, in both themes, next to the hierarchy page's, and fix anything that looks different.
+3. Check every toggle state.
 4. At every width, nothing scrolls sideways and connectors line up with the boxes they join.
-5. Select at least one item of each kind by keyboard and confirm the highlights and info bar.
+5. `pnpm interact <category/slug>` passes. Then open its `interact-*.png` screenshots and check that the highlights connect the right items.
 6. Confirm the page appears on the home page and in the sidebar.
 
 ## Git
 
 - Branch names: `robpitcher-<topic>`.
-- Put `Closes #N` in the PR body, and list the sources there.
+- List the sources in the PR body. If the work has an issue, add `Closes #N`; if it doesn't, skip it.
 - Open new issues for scope you cut. Don't widen the current PR.
