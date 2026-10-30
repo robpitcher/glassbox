@@ -1,0 +1,55 @@
+---
+title: "Repository merge gates"
+shortTitle: "Repository merge gates"
+navTitle: "Merge gates"
+category: "GitHub"
+summary: "Rulesets, branch protection, checks, and reviews → can this PR merge?"
+order: 120
+badge: "New"
+art: "gates"
+breadcrumb:
+  - "GitHub"
+  - "Repositories"
+  - "Merge gates"
+updated: 2026-10-15
+---
+
+import FactCards from '/src/components/FactCards.astro';
+import MergeGates from '/src/components/gates/MergeGates.svelte';
+
+<FactCards
+  cards={[
+    { label: 'Rulesets on a branch', value: 'all apply' },
+    { label: 'Same rule, two values', value: 'strictest wins' },
+    { label: 'Branch protection', value: 'one rule per branch' },
+    { label: 'CODEOWNERS alone', value: 'requests, not requires' },
+  ]}
+/>
+
+<MergeGates client:visible />
+
+## Where each rule is configured
+
+- **Org ruleset `baseline`.** Set by `acme-web` owners under the organization's settings, and aimed at the default branch of every repository in the org. It requires a pull request, 1 approval, and the `build` check. Org rulesets need GitHub Team or Enterprise, and they can target repositories by name pattern or custom property. Enterprises can set rulesets across organizations too.
+- **Repo ruleset `protect-main`.** Set by `checkout` admins under the repository's settings. It also requires a pull request, and adds 2 approvals, a code owner review, and the `test` check. Approval counts and code owner review are options of its pull request rule.
+- **Branch protection rule on `main`.** The older control, also under the repository's settings. It still applies alongside rulesets, and here it requires every conversation to be resolved. Only one branch protection rule applies to a branch, so many teams convert these rules into rulesets.
+- **`CODEOWNERS` file.** Lives in `.github/`, the root, or `docs/` on the base branch. It maps `/src/payments/` to `@acme-web/payments`, so GitHub requests that team's review. The review is only required because the repo ruleset turns on code owner review.
+
+## How the gates combine on #42
+
+- **Nothing overrides.** Rulesets have no priority order. Every rule from every ruleset and the branch protection rule applies, and when two sources set the same rule differently, the most restrictive version wins.
+- **Pull request.** Both rulesets require one. kai can't push to `main`, so the change arrives as #42 from `kai/refunds`.
+- **Required checks.** The org asks for `build` and the repo asks for `test`, so both must pass. A required check counts as passing when it's successful, skipped, or neutral.
+- **Code owner review.** mona is on `payments` and approves. One approval from any owner is enough, and authors can't approve their own pull request.
+- **Approvals.** The org asks for 1 and the repo asks for 2, so 2 are required. mona's approval counts toward the total. With only mona's approval, **the merge is blocked by the repo ruleset's approval count**. When ray approves too, every gate is met and the merge is allowed.
+- **Conversations.** The branch protection rule requires every review thread to be resolved, and all three are.
+
+## Variations to expect
+
+- **Not every repository has all of this.** A repository might use only branch protection, only rulesets, or neither. Don't assume another repository's `main` has the same gates.
+- **Checks can require an up-to-date branch.** With the strict setting, the branch must include the latest `main` before it can merge. With the loose setting, it doesn't.
+- **Pushes can reset reviews.** A rule can dismiss stale approvals after a new push, or require approval of the most recent push from someone other than its author.
+- **Some people can bypass.** Rulesets have a bypass list of roles, teams, or apps. A branch protection rule doesn't apply to admins unless it's set to not allow bypassing.
+- **Rulesets can be tested first.** In Evaluate mode, a ruleset isn't enforced, and Rule Insights shows what would have passed or failed.
+- **Finding the blocker.** The pull request's merge box lists the rules that block it, and anyone with read access can view a branch's active rulesets.
+- **Other gates exist.** Rulesets and branch protection can also require deployments, code scanning results, signed commits, linear history, or a merge queue. Each adds one more gate to the same track.

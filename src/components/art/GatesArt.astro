@@ -1,0 +1,78 @@
+<div class="gates-art" aria-hidden="true">
+  <div class="sources">
+    <span style="--cat: var(--cc-3)"></span>
+    <span style="--cat: var(--cc-1)"></span>
+    <span style="--cat: var(--cc-4)"></span>
+  </div>
+  <div class="track">
+    <span class="gate"></span>
+    <span class="gate"></span>
+    <span class="gate gate--fail"></span>
+    <span class="gate"></span>
+  </div>
+  <span class="merge"></span>
+</div>
+
+<style>
+  .gates-art {
+    width: min(100%, 286px);
+    height: 120px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    gap: 12px 14px;
+    padding: 18px 16px;
+  }
+
+  .sources {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+  }
+
+  .sources span {
+    height: 14px;
+    border: 1.5px solid var(--cat);
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--cat) 22%, transparent);
+  }
+
+  .track {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .track::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 50%;
+    border-top: 2px dashed var(--border-strong);
+  }
+
+  .gate {
+    position: relative;
+    width: 26px;
+    height: 26px;
+    border: 2px solid var(--ok);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--ok) 22%, var(--surface-solid));
+  }
+
+  .gate--fail {
+    border-color: var(--bad);
+    background: color-mix(in srgb, var(--bad) 22%, var(--surface-solid));
+  }
+
+  .merge {
+    width: 42px;
+    height: 26px;
+    border-radius: var(--radius-pill);
+    background: var(--accent-grad);
+  }
+</style>
