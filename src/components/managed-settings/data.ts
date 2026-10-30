@@ -118,7 +118,7 @@ const contractor = (covered: boolean): Person => ({ name: 'contractor', detail: 
 
 export const DELIVERY: Record<DeliveryId, Delivery> = {
   server: {
-    label: 'Server',
+    label: 'Repo',
     steps: [
       {
         label: 'Lives in',
