@@ -170,17 +170,7 @@
                 {@render node(ent.policy.id, 'policy', ent.policy.name, ent.policy.sub)}
                 <div class="porgs">
                   {#each ent.orgs as o (o.id)}
-                    <div class="slot" class:open={selected === o.id}>
-                      {@render node(o.id, 'org', o.name, o.sub)}
-                      {#if o.team}
-                        <div class="pop" style="--c: var(--cc-{o.team.tone})">
-                          <span class="kind">{KIND_LABEL.team}</span>
-                          <b>{o.team.name}</b>
-                          <small>{o.team.sub}</small>
-                          <small>{o.team.note}</small>
-                        </div>
-                      {/if}
-                    </div>
+                    {@render node(o.id, 'org', o.name, o.sub)}
                   {/each}
                 </div>
               </div>
@@ -370,6 +360,11 @@
     border-width: 1.5px;
   }
 
+  .k-users {
+    border-style: dotted;
+    border-width: 1.5px;
+  }
+
   .k-app {
     border-style: dashed;
   }
@@ -507,52 +502,6 @@
     background: color-mix(in srgb, var(--accent) 14%, var(--surface-solid));
   }
 
-  /* Enterprise-team pop-out beside an org, on selection or hover. */
-  .slot {
-    position: relative;
-  }
-
-  .pop {
-    --c: var(--cc-0);
-    --reach: 105px;
-    position: absolute;
-    top: 0;
-    right: calc(100% + var(--reach));
-    z-index: 3;
-    display: none;
-    gap: 1px;
-    width: calc(100% + 17px);
-    padding: 0.5rem 0.75rem;
-    border: 1.5px dashed color-mix(in srgb, var(--c) 70%, var(--border));
-    border-radius: var(--radius-sm);
-    background: color-mix(in srgb, var(--c) 12%, var(--surface-solid));
-    box-shadow: var(--shadow);
-  }
-
-  .pop::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 100%;
-    width: var(--reach);
-    border-top: 1.5px dashed color-mix(in srgb, var(--c) 70%, var(--border));
-  }
-
-  .slot.open .pop,
-  .slot:hover .pop,
-  .slot:focus-within .pop {
-    display: grid;
-  }
-
-  .pop b {
-    font-size: 0.92rem;
-  }
-
-  .pop small {
-    color: var(--muted);
-    font-size: 0.75rem;
-  }
-
   /* Summary */
   .summary {
     display: grid;
@@ -582,10 +531,6 @@
     .ent-body {
       gap: 64px;
     }
-
-    .pop {
-      --reach: 73px;
-    }
   }
 
   @container (max-width: 720px) {
@@ -602,16 +547,6 @@
 
     .apps {
       padding-top: 0;
-    }
-
-    .pop {
-      position: static;
-      width: auto;
-      margin-top: 6px;
-    }
-
-    .pop::after {
-      display: none;
     }
   }
 

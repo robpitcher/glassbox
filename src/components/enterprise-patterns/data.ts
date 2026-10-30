@@ -3,16 +3,16 @@
 
 export type PatternId = 'per-company' | 'central' | 'delegated';
 
-export type ActorKind = 'role' | 'org-owners';
+export type ActorKind = 'role' | 'org-owners' | 'users';
 
 export const KIND_LABEL = {
   group: 'IdP group',
   app: 'Entra app',
   role: 'Role',
   'org-owners': 'Org owners',
+  users: 'Users',
   org: 'Org',
   policy: 'Policies',
-  team: 'Enterprise team',
 } as const;
 
 /** Category color, as an index into the --cc-N tokens. */
@@ -33,18 +33,6 @@ export interface Actor extends Node {
   kind: ActorKind;
 }
 
-export interface EnterpriseTeam {
-  name: string;
-  sub: string;
-  note: string;
-  tone: Tone;
-}
-
-export interface Org extends Node {
-  /** Shown beside the org on hover or selection. */
-  team?: EnterpriseTeam;
-}
-
 export interface Enterprise {
   id: string;
   name: string;
@@ -53,7 +41,7 @@ export interface Enterprise {
   billing: string;
   actors: Actor[];
   policy: Node;
-  orgs: Org[];
+  orgs: Node[];
 }
 
 /** [from, to, label]. Edges with a label (even an empty one) are control lines; the rest are provisioning. */
@@ -194,27 +182,16 @@ export const PATTERNS: Record<PatternId, Pattern> = {
         shortcode: 'acme',
         tone: 0,
         billing: 'Cost centers: acme, labs',
-        actors: [{ id: 'o-ent', kind: 'role', name: 'Enterprise owners', sub: 'GH-Platform members', tone: 3 }],
+        actors: [
+          { id: 'o-ent', kind: 'role', name: 'Enterprise owners', sub: 'GH-Platform members', tone: 3 },
+          { id: 'u-acme', kind: 'users', name: 'GH-Acme', sub: 'acme team · cost center acme', tone: 0 },
+          { id: 'u-labs', kind: 'users', name: 'GH-Labs', sub: 'labs team · cost center labs', tone: 2 },
+        ],
         policy: { id: 'p-ent', name: 'Enterprise policies', sub: 'Set centrally for every org' },
         orgs: [
-          {
-            id: 'acme-web',
-            name: 'acme-web',
-            sub: 'Owner: central team',
-            team: { name: 'acme', sub: 'Synced from GH-Acme', note: 'No admin role · bills to cost center acme', tone: 0 },
-          },
-          {
-            id: 'acme-data',
-            name: 'acme-data',
-            sub: 'Owner: central team',
-            team: { name: 'acme', sub: 'Synced from GH-Acme', note: 'No admin role · bills to cost center acme', tone: 0 },
-          },
-          {
-            id: 'labs-core',
-            name: 'labs-core',
-            sub: 'Owner: central team',
-            team: { name: 'labs', sub: 'Synced from GH-Labs', note: 'No admin role · bills to cost center labs', tone: 2 },
-          },
+          { id: 'acme-web', name: 'acme-web', sub: 'Owner: central team' },
+          { id: 'acme-data', name: 'acme-data', sub: 'Owner: central team' },
+          { id: 'labs-core', name: 'labs-core', sub: 'Owner: central team' },
         ],
       },
     ],
@@ -223,21 +200,28 @@ export const PATTERNS: Record<PatternId, Pattern> = {
       ['g-acme', 'app-oidc'],
       ['g-labs', 'app-oidc'],
       ['app-oidc', 'o-ent'],
+      ['app-oidc', 'u-acme'],
+      ['app-oidc', 'u-labs'],
       ['o-ent', 'p-ent', 'sets'],
-      ['o-ent', 'acme-web', 'sets'],
+      ['o-ent', 'acme-web', ''],
       ['o-ent', 'acme-data', ''],
       ['o-ent', 'labs-core', ''],
+      ['u-acme', 'acme-web'],
+      ['u-acme', 'acme-data'],
+      ['u-labs', 'labs-core'],
     ],
     links: {
       'g-plat': ['app-oidc', 'o-ent', 'p-ent', 'acme-web', 'acme-data', 'labs-core'],
-      'g-acme': ['app-oidc', 'acme-web', 'acme-data'],
-      'g-labs': ['app-oidc', 'labs-core'],
-      'app-oidc': ['g-plat', 'g-acme', 'g-labs', 'o-ent'],
+      'g-acme': ['app-oidc', 'u-acme', 'acme-web', 'acme-data'],
+      'g-labs': ['app-oidc', 'u-labs', 'labs-core'],
+      'app-oidc': ['g-plat', 'g-acme', 'g-labs', 'o-ent', 'u-acme', 'u-labs'],
       'o-ent': ['g-plat', 'app-oidc', 'p-ent', 'acme-web', 'acme-data', 'labs-core'],
+      'u-acme': ['g-acme', 'app-oidc', 'acme-web', 'acme-data'],
+      'u-labs': ['g-labs', 'app-oidc', 'labs-core'],
       'p-ent': ['o-ent', 'acme-web', 'acme-data', 'labs-core'],
-      'acme-web': ['o-ent', 'p-ent', 'g-acme', 'app-oidc'],
-      'acme-data': ['o-ent', 'p-ent', 'g-acme', 'app-oidc'],
-      'labs-core': ['o-ent', 'p-ent', 'g-labs', 'app-oidc'],
+      'acme-web': ['o-ent', 'p-ent', 'u-acme', 'g-acme', 'app-oidc'],
+      'acme-data': ['o-ent', 'p-ent', 'u-acme', 'g-acme', 'app-oidc'],
+      'labs-core': ['o-ent', 'p-ent', 'u-labs', 'g-labs', 'app-oidc'],
     },
     info: {
       'g-plat': { lead: 'GH-Platform:', text: 'its members are the enterprise owners, and they also own every org.' },
@@ -245,10 +229,12 @@ export const PATTERNS: Record<PatternId, Pattern> = {
       'g-labs': { lead: 'GH-Labs:', text: 'the acquired company gets an enterprise team and a cost center, not its own enterprise.' },
       'app-oidc': { lead: 'EMU OIDC app:', text: 'one app provisions every group into the single enterprise.' },
       'o-ent': { lead: 'Enterprise owners:', text: 'one central team sets policy and owns every org; no company administers anything itself.' },
+      'u-acme': { lead: 'GH-Acme users:', text: 'provisioned as managed users, synced to the acme enterprise team, and added to acme-web and acme-data as members with no admin role.' },
+      'u-labs': { lead: 'GH-Labs users:', text: 'provisioned the same way, synced to the labs enterprise team, and added to labs-core as members with no admin role.' },
       'p-ent': { lead: 'Enterprise policies:', text: 'set by the central team and flow down to every org inside the frame.' },
-      'acme-web': { lead: 'acme-web:', text: 'owned by the central team; the acme enterprise team works here with no admin role and bills to the acme cost center.' },
-      'acme-data': { lead: 'acme-data:', text: 'owned by the central team; the acme enterprise team works here with no admin role and bills to the acme cost center.' },
-      'labs-core': { lead: 'labs-core:', text: 'Acme Labs’ code, still owned by the central team; the labs enterprise team bills to the labs cost center.' },
+      'acme-web': { lead: 'acme-web:', text: 'owned by the central team; GH-Acme users work here as members and bill to the acme cost center.' },
+      'acme-data': { lead: 'acme-data:', text: 'owned by the central team; GH-Acme users work here as members and bill to the acme cost center.' },
+      'labs-core': { lead: 'labs-core:', text: 'Acme Labs’ code, still owned by the central team; GH-Labs users work here and bill to the labs cost center.' },
     },
   },
 
