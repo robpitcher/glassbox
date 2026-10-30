@@ -167,7 +167,7 @@ export const PATTERNS: Record<PatternId, Pattern> = {
     summary: {
       Identity: 'One OIDC app and one account per person, including acquired staff.',
       Control: 'Central enterprise owners set every policy and own every org. Each company is an enterprise team with no admin role.',
-      Cost: `One enterprise account split into cost centers by enterprise team. ${AZURE_NOTE}`,
+      Cost: `One enterprise account with a cost center per company: its enterprise team carries license costs, and its orgs carry usage such as Actions. ${AZURE_NOTE}`,
     },
     groups: [
       { id: 'g-plat', name: 'GH-Platform', sub: 'Central admins', tone: 3 },
@@ -294,9 +294,9 @@ export const PATTERNS: Record<PatternId, Pattern> = {
       'own-acme': ['g-acme', 'app-oidc', 'acme-web', 'acme-data'],
       'own-labs': ['g-labs', 'app-oidc', 'labs-core'],
       'p-ent': ['o-ent', 'acme-web', 'acme-data', 'labs-core'],
-      'acme-web': ['own-acme', 'p-ent'],
-      'acme-data': ['own-acme', 'p-ent'],
-      'labs-core': ['own-labs', 'p-ent'],
+      'acme-web': ['own-acme', 'o-ent', 'p-ent'],
+      'acme-data': ['own-acme', 'o-ent', 'p-ent'],
+      'labs-core': ['own-labs', 'o-ent', 'p-ent'],
     },
     info: {
       'g-plat': { lead: 'GH-Platform:', text: 'enterprise owners who set guardrails and billing but don’t run the orgs day to day.' },
