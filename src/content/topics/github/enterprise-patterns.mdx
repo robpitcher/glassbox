@@ -1,0 +1,59 @@
+---
+title: "EMU enterprise patterns"
+shortTitle: "Enterprise setup patterns"
+navTitle: "Enterprise patterns"
+category: "GitHub"
+summary: "One Entra tenant, three ways to split identity, control, and cost across companies."
+order: 111
+badge: "New"
+art: "enterprise-patterns"
+breadcrumb:
+  - "GitHub"
+  - "Enterprise Cloud"
+  - "Enterprise patterns"
+updated: 2026-10-30
+---
+
+import FactCards from '/src/components/FactCards.astro';
+import EnterprisePatterns from '/src/components/enterprise-patterns/EnterprisePatterns.svelte';
+import { withBase } from '/src/lib/url';
+
+<FactCards
+  cards={[
+    { label: 'Entra tenants', value: '1 in every pattern' },
+    { label: 'OIDC per tenant', value: '1 enterprise' },
+    { label: 'Split spend with', value: 'cost centers' },
+    { label: 'Delegate with', value: 'org ownership' },
+  ]}
+/>
+
+<EnterprisePatterns client:visible />
+
+## Enterprise per company
+
+- **Identity.** Each company gets its own enterprise with managed users. Entra ID supports only one OIDC integration per tenant, so one enterprise uses the OIDC app and every other enterprise uses a SAML app.
+- **Two accounts.** Managed user accounts belong to one enterprise. Someone who works in both companies gets two accounts, such as `mona_acme` and `mona_acmelabs`.
+- **Control.** Each enterprise has its own enterprise owners and policies. Nothing is shared, so a policy change in one enterprise has to be repeated in the other.
+- **Cost.** Each enterprise is billed on its own.
+
+## Central enterprise
+
+- **Identity.** One OIDC app provisions everyone, including an acquired company's staff, into one enterprise with one account each.
+- **Control.** A central team, such as members of `GH-Platform`, are the enterprise owners. They set every policy and own every organization.
+- **Companies.** Each company is an enterprise team synced from an Entra group, such as `acme` and `labs`. The team gets access to the right organizations, but holds no admin role.
+- **Cost.** Cost centers split the bill by enterprise team, organization, or repository. If you pay through Azure, each cost center can bill a different Azure subscription.
+
+## Delegated orgs
+
+- **Identity.** The same as the central enterprise: one OIDC app and one account per person.
+- **Guardrails.** Enterprise owners enforce the policies that matter everywhere. Policies left at "No policy" are each organization owner's call.
+- **Delegation.** Each company's admins are made owners of that company's organizations. The organization owner role goes to people, not teams, so add each admin individually.
+- **Cost.** Each organization gets its own cost center, which its organization owners can manage within the one enterprise account.
+- **Visibility.** Enterprise owners don't see an organization's content unless they join it, but they can add themselves as an owner of any organization in the enterprise.
+
+## Choosing a pattern
+
+- **Pick enterprise per company** only when companies must stay fully isolated, for example for legal or regulatory reasons.
+- **Pick a central enterprise** when one platform team can run GitHub for everyone. It's the simplest way to absorb an acquisition.
+- **Pick delegated orgs** when companies need to run their own organizations but should share one identity setup and one set of guardrails.
+- For how enterprises, organizations, teams, and repositories nest, and how managed users differ from personal accounts, see the <a href={withBase('/github/account-enterprise-hierarchy/')}>enterprise hierarchy</a>.

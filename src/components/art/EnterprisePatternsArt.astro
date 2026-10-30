@@ -1,0 +1,97 @@
+<div class="patterns-art" aria-hidden="true">
+  <div class="tenant">
+    <span class="group group--0"></span>
+    <span class="group group--2"></span>
+  </div>
+  <div class="enterprise">
+    <span class="bar"></span>
+    <div class="frame">
+      <span class="policy"></span>
+      <span class="org org--0"></span>
+      <span class="org org--2"></span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .patterns-art {
+    width: min(100%, 286px);
+    height: 120px;
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    align-items: center;
+    gap: 26px;
+    padding: 0 16px;
+    position: relative;
+  }
+
+  .tenant {
+    display: grid;
+    gap: 8px;
+    padding: 8px;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: 10px;
+  }
+
+  .group {
+    display: block;
+    height: 14px;
+    border-radius: 4px;
+  }
+
+  .group--0 {
+    background: color-mix(in srgb, var(--cc-0) 80%, transparent);
+  }
+
+  .group--2 {
+    background: color-mix(in srgb, var(--cc-2) 80%, transparent);
+  }
+
+  .enterprise {
+    display: grid;
+    gap: 7px;
+    padding: 8px;
+    border: 1.5px solid color-mix(in srgb, var(--accent) 70%, transparent);
+    border-radius: 10px;
+  }
+
+  .bar {
+    display: block;
+    width: 46%;
+    height: 9px;
+    border-radius: 3px;
+    background: var(--accent-grad);
+  }
+
+  .frame {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    padding: 0 6px 6px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .policy {
+    grid-column: 1 / -1;
+    height: 10px;
+    margin-inline: -6px;
+    background: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 7px);
+  }
+
+  .org {
+    display: block;
+    height: 22px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+  }
+
+  .org--0 {
+    border-color: var(--cc-0);
+  }
+
+  .org--2 {
+    border-color: var(--cc-2);
+  }
+</style>
