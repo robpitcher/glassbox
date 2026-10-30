@@ -141,6 +141,7 @@ export const LABELS = {
   request: 'Request',
   hint: 'Select a gate for detail',
   gate: 'Gate',
+  setBy: 'Set by',
   passed: 'passed',
   stopped: 'stopped the request',
   notReached: 'not reached',
