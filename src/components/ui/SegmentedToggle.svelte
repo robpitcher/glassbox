@@ -29,7 +29,10 @@
     padding: 0.25rem;
     border: 1px solid var(--border);
     border-radius: var(--radius-pill);
-    background: color-mix(in srgb, var(--bg) 60%, transparent);
+    background: var(--glass-track);
+    box-shadow: var(--glass-track-shadow);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
   }
 
   .segmented.stretch {
@@ -46,7 +49,7 @@
     color: var(--muted);
     font-size: 0.88rem;
     font-weight: 750;
-    transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
   }
 
   button:hover {
@@ -59,8 +62,10 @@
   }
 
   button[aria-pressed='true'] {
-    background: var(--accent-grad);
+    background: var(--glass-pill);
     color: var(--on-accent);
+    box-shadow: var(--glass-pill-shadow);
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
   }
 
   @container (max-width: 600px) {

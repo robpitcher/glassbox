@@ -406,8 +406,10 @@
     overflow: hidden;
     border: 1px solid var(--border-strong);
     border-radius: var(--radius);
-    background: var(--surface-solid);
-    box-shadow: var(--shadow);
+    background: color-mix(in srgb, var(--surface-solid) 72%, transparent);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow), 0 30px 80px rgba(0, 0, 0, 0.3);
   }
 
   .search-header {

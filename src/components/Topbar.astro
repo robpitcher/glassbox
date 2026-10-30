@@ -54,8 +54,10 @@ import { withBase } from '../lib/url';
     z-index: 50;
     height: var(--topbar-h);
     border-bottom: 1px solid var(--border);
-    background: color-mix(in srgb, var(--bg) 78%, transparent);
-    backdrop-filter: blur(18px);
+    background: color-mix(in srgb, var(--bg) 55%, transparent);
+    box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--text) 4%, transparent);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
   }
 
   .topbar__inner {
@@ -144,6 +146,7 @@ import { withBase } from '../lib/url';
     border: 1px solid var(--border);
     border-radius: 12px;
     background: var(--surface-2);
+    box-shadow: var(--glass-sheen);
     color: var(--muted);
     text-align: left;
   }

@@ -54,8 +54,9 @@ const topicHref = (id: string) => withBase(`/${id}/`);
     display: grid;
     grid-template-rows: 1fr auto;
     border-right: 1px solid var(--border);
-    background: color-mix(in srgb, var(--surface-solid) 42%, transparent);
-    backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--surface-solid) 30%, transparent);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
   }
 
   .sidebar__scroll {
@@ -142,6 +143,7 @@ const topicHref = (id: string) => withBase(`/${id}/`);
   .sidebar__link.is-active {
     color: var(--accent);
     background: var(--accent-soft);
+    box-shadow: var(--glass-sheen);
     font-weight: 720;
   }
 
