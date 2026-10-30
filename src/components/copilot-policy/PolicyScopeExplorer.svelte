@@ -279,17 +279,17 @@
 
   .tag-enterprise {
     background: color-mix(in srgb, var(--accent) 22%, transparent);
-    color: var(--accent);
+    color: color-mix(in srgb, var(--accent) 60%, var(--text));
   }
 
   .tag-org {
     background: color-mix(in srgb, var(--accent-2) 16%, transparent);
-    color: var(--accent-2);
+    color: color-mix(in srgb, var(--accent-2) 60%, var(--text));
   }
 
   .tag-assigned {
     background: color-mix(in srgb, var(--cc-3) 18%, transparent);
-    color: var(--cc-3);
+    color: color-mix(in srgb, var(--cc-3) 60%, var(--text));
   }
 
   /* Policy values */
@@ -305,12 +305,12 @@
 
   .value.on {
     border-color: color-mix(in srgb, var(--ok) 55%, transparent);
-    color: var(--ok);
+    color: color-mix(in srgb, var(--ok) 60%, var(--text));
   }
 
   .value.off {
     border-color: color-mix(in srgb, var(--bad) 55%, transparent);
-    color: var(--bad);
+    color: color-mix(in srgb, var(--bad) 60%, var(--text));
   }
 
   .value.delegated {
@@ -429,12 +429,12 @@
 
   .result.on {
     background: color-mix(in srgb, var(--ok) 16%, transparent);
-    color: var(--ok);
+    color: color-mix(in srgb, var(--ok) 60%, var(--text));
   }
 
   .result.off {
     background: color-mix(in srgb, var(--bad) 16%, transparent);
-    color: var(--bad);
+    color: color-mix(in srgb, var(--bad) 60%, var(--text));
   }
 
   @container (max-width: 760px) {
