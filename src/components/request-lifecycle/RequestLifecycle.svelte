@@ -87,10 +87,7 @@
             </span>
             <span class="name">{g.name}</span>
             <span class="sub">{g.sub}</span>
-            <span class="owner">
-              <span class="owner-label">{LABELS.setBy}</span>
-              <span class="owner-text">{g.owner}</span>
-            </span>
+            <span class="owner">{g.owner}</span>
           </button>
         </li>
       {/each}
@@ -266,41 +263,16 @@
   }
 
   .owner {
-    display: grid;
-    gap: 0.2rem;
+    justify-self: start;
     margin-top: 0.35rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid var(--border);
-  }
-
-  .owner-label {
-    color: var(--muted);
-    font-size: 0.62rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .owner-text {
-    display: flex;
-    align-items: baseline;
-    gap: 0.4rem;
-    color: var(--text);
-    font-size: 0.76rem;
-    font-weight: 600;
-    line-height: 1.35;
-  }
-
-  /* Enforcer dot, matching the legend. */
-  .owner-text::before {
-    content: '';
-    flex: none;
-    width: 0.55rem;
-    height: 0.55rem;
-    border: 1.5px solid var(--c);
+    padding: 0.15rem 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--c) 50%, transparent);
     border-radius: var(--radius-pill);
-    background: color-mix(in srgb, var(--c) 20%, transparent);
-    transform: translateY(0.05rem);
+    background: color-mix(in srgb, var(--c) 10%, transparent);
+    color: var(--c);
+    font-size: 0.7rem;
+    font-weight: 750;
+    line-height: 1.3;
   }
 
   .gate.github {
@@ -361,13 +333,10 @@
     color: var(--muted);
   }
 
-  .gate.is-dim .owner-text {
-    color: var(--muted);
-  }
-
-  .gate.is-dim .owner-text::before {
-    border-color: var(--border-strong);
+  .gate.is-dim .owner {
+    border-color: var(--border);
     background: transparent;
+    color: var(--muted);
   }
 
   /* Outcome */
@@ -490,10 +459,8 @@
       grid-column: 2;
       grid-row: 2 / span 2;
       align-self: center;
-      justify-items: end;
+      justify-self: end;
       margin-top: 0;
-      padding-top: 0;
-      border-top: 0;
       text-align: right;
     }
 
@@ -510,10 +477,8 @@
     .owner {
       grid-column: 1;
       grid-row: auto;
-      justify-items: start;
+      justify-self: start;
       margin-top: 0.3rem;
-      padding-top: 0.45rem;
-      border-top: 1px solid var(--border);
       text-align: left;
     }
   }
