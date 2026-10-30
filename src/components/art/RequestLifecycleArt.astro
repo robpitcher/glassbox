@@ -1,0 +1,52 @@
+<div class="lifecycle-art" aria-hidden="true">
+  <span class="gate pass"></span>
+  <span class="link pass"></span>
+  <span class="gate pass"></span>
+  <span class="link pass"></span>
+  <span class="gate pass"></span>
+  <span class="link"></span>
+  <span class="gate stop"></span>
+  <span class="link"></span>
+  <span class="gate"></span>
+</div>
+
+<style>
+  .lifecycle-art {
+    display: flex;
+    align-items: center;
+    width: min(100%, 270px);
+  }
+
+  .gate {
+    flex: none;
+    width: 34px;
+    height: 46px;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: 8px;
+    background: var(--surface-solid);
+  }
+
+  .gate.pass {
+    border: 1.5px solid color-mix(in srgb, var(--ok) 60%, var(--border));
+    background:
+      linear-gradient(var(--ok), var(--ok)) center 14px / 12px 3px no-repeat,
+      color-mix(in srgb, var(--ok) 10%, var(--surface-solid));
+  }
+
+  .gate.stop {
+    border: 1.5px solid var(--bad);
+    background:
+      linear-gradient(var(--bad), var(--bad)) center 14px / 12px 3px no-repeat,
+      color-mix(in srgb, var(--bad) 12%, var(--surface-solid));
+  }
+
+  .link {
+    flex: 1;
+    height: 2px;
+    background: var(--border-strong);
+  }
+
+  .link.pass {
+    background: var(--ok);
+  }
+</style>

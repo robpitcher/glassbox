@@ -112,6 +112,10 @@ const formatted = new Intl.DateTimeFormat('en', { month: 'long', day: 'numeric',
     margin-top: 8px;
   }
 
+  .topic__content :global(> ul code) {
+    overflow-wrap: anywhere;
+  }
+
   .topic__content :global(.sources) {
     margin-top: 42px;
     padding-top: 18px;
