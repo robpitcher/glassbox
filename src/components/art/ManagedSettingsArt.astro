@@ -1,0 +1,78 @@
+<div class="managed-art" aria-hidden="true">
+  <div class="gate"><span class="bar"></span></div>
+  <div class="layer layer--top"><span class="dot"></span><span class="bar"></span></div>
+  <div class="layer"><span class="dot"></span><span class="bar"></span></div>
+  <div class="layer"><span class="dot"></span><span class="bar"></span></div>
+  <div class="layer layer--user"><span class="dot"></span><span class="bar"></span></div>
+</div>
+
+<style>
+  .managed-art {
+    display: grid;
+    gap: 6px;
+    width: min(100%, 220px);
+  }
+
+  .gate,
+  .layer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 18px;
+    padding: 0 10px;
+    border-radius: 6px;
+  }
+
+  .gate {
+    height: 22px;
+    margin-bottom: 4px;
+    border: 1.5px solid var(--cc-0);
+    background: color-mix(in srgb, var(--cc-0) 14%, transparent);
+  }
+
+  .gate .bar {
+    width: 46%;
+    background: var(--cc-0);
+  }
+
+  .layer {
+    border: 1.5px solid color-mix(in srgb, var(--cc-1) 45%, var(--border));
+    background: color-mix(in srgb, var(--cc-1) 8%, transparent);
+  }
+
+  .layer--top {
+    border-color: var(--ok);
+  }
+
+  .layer--user {
+    border-style: dashed;
+    border-color: var(--border-strong);
+    background: transparent;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-pill);
+    background: var(--cc-1);
+  }
+
+  .layer--top .dot {
+    background: var(--ok);
+  }
+
+  .layer--user .dot {
+    background: var(--muted);
+  }
+
+  .bar {
+    height: 5px;
+    width: 58%;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--cc-1) 60%, transparent);
+  }
+
+  .layer--user .bar {
+    background: var(--border-strong);
+  }
+</style>
