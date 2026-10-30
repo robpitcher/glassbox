@@ -16,7 +16,7 @@ const topics = defineCollection({
     order: z.number().default(100),
     updated: z.date(),
     badge: z.string().optional(),
-    art: z.enum(['billing', 'hierarchy', 'copilot-access', 'request-lifecycle']).optional(),
+    art: z.enum(['billing', 'hierarchy', 'copilot-access', 'copilot-policy', 'request-lifecycle']).optional(),
     breadcrumb: z.array(z.string()).optional(),
   }),
 });

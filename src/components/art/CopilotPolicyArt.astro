@@ -1,0 +1,90 @@
+<div class="policy-art" aria-hidden="true">
+  <div class="ent">
+    <span class="bar"></span>
+    <div class="levels">
+      <span class="lvl lvl--on"><span class="dot"></span></span>
+      <span class="lvl lvl--off"><span class="dot"></span></span>
+      <span class="lvl lvl--assigned"><span class="dot"></span></span>
+    </div>
+  </div>
+  <div class="people">
+    <span class="person lit"></span>
+    <span class="person"></span>
+    <span class="person"></span>
+  </div>
+</div>
+
+<style>
+  .policy-art {
+    display: grid;
+    gap: 10px;
+    width: min(100%, 250px);
+  }
+
+  .ent {
+    display: grid;
+    gap: 8px;
+    padding: 10px;
+    border: 1.5px solid color-mix(in srgb, var(--accent) 50%, var(--border));
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+
+  .bar {
+    width: 46%;
+    height: 8px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--accent) 65%, transparent);
+  }
+
+  .levels {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .lvl {
+    display: grid;
+    place-items: center;
+    height: 34px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 8px;
+  }
+
+  .lvl--on {
+    border-color: var(--accent-2);
+    background: color-mix(in srgb, var(--accent-2) 14%, transparent);
+  }
+
+  .lvl--assigned {
+    border-style: dashed;
+    border-color: color-mix(in srgb, var(--cc-3) 60%, var(--border));
+  }
+
+  .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: var(--radius-pill);
+    background: var(--bad);
+  }
+
+  .lvl--on .dot {
+    background: var(--ok);
+  }
+
+  .people {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .person {
+    height: 14px;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+
+  .person.lit {
+    background: var(--accent-2);
+  }
+</style>
