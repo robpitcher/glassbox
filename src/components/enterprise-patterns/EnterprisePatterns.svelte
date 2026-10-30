@@ -12,6 +12,7 @@
     SUMMARY_KEYS,
     TENANT,
     VISUAL,
+    type Enterprise,
     type PatternId,
   } from './data';
 
@@ -83,6 +84,9 @@
   });
 
   const edgeTone = (from: string, to: string) => (!lit ? '' : lit.has(from) && lit.has(to) ? 'hot' : 'cold');
+
+  const entIds = (ent: Enterprise) => [...ent.actors.map((a) => a.id), ent.policy.id, ...ent.orgs.map((o) => o.id)];
+  const entDim = (ent: Enterprise) => !!lit && !entIds(ent).some((id) => lit!.has(id));
 </script>
 
 <section class="visual" aria-labelledby="ep-title" onkeydown={(e) => e.key === 'Escape' && clear()}>
@@ -147,7 +151,7 @@
     <div class="col">
       <span class="visual-label">{LANE_LABELS.github}</span>
       {#each pattern.enterprises as ent (ent.id)}
-        <div class="ent" style="--c: var(--cc-{ent.tone})">
+        <div class="ent" class:is-dim={entDim(ent)} style="--c: var(--cc-{ent.tone})">
           <div class="ent-head">
             <b>Enterprise {ent.name}</b>
             <span class="mono">{ent.shortcode}</span>
@@ -410,6 +414,18 @@
     border: 1px solid color-mix(in srgb, var(--c) 45%, var(--border));
     border-radius: var(--radius);
     background: color-mix(in srgb, var(--c) 5%, var(--surface));
+    transition:
+      border-color var(--dur) var(--ease),
+      background-color var(--dur) var(--ease);
+  }
+
+  .ent.is-dim {
+    border-color: var(--border);
+    background: var(--surface);
+  }
+
+  .ent.is-dim .ent-head b {
+    color: var(--muted);
   }
 
   .ent + .ent {
