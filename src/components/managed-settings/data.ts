@@ -122,9 +122,9 @@ export const DELIVERY: Record<DeliveryId, Delivery> = {
     steps: [
       {
         label: 'Lives in',
-        paths: ['acme-web/.github-private', 'copilot/managed-settings.json'],
-        note: 'The organization chosen in AI controls.',
-        explain: 'the file sits in the .github-private repository of the organization you select in AI controls; GitHub recommends internal visibility and admin-only edits.',
+        paths: ['.github-private'],
+        note: 'A repo in the organization chosen in AI controls.',
+        explain: 'the file is copilot/managed-settings.json in the .github-private repository of the organization you select in AI controls, such as acme-web; GitHub recommends internal visibility and admin-only edits.',
       },
       {
         label: 'Deployed by',
