@@ -310,6 +310,7 @@
     width: 1.08rem;
     height: 1.08rem;
     border-radius: var(--radius-pill);
+    border: 1px solid var(--glass-knob-border);
     background: var(--glass-knob);
     box-shadow: inset 0 -1px 1px rgba(15, 23, 42, 0.12), 0 2px 5px rgba(0, 0, 0, 0.3);
     transition: transform var(--dur) var(--ease), background var(--dur) var(--ease);
