@@ -54,7 +54,8 @@
     padding: 3px;
     border: 1px solid var(--border);
     border-radius: var(--radius-pill);
-    background: var(--surface-2);
+    background: var(--glass-track);
+    box-shadow: var(--glass-track-shadow);
   }
 
   button {
@@ -67,22 +68,26 @@
     color: var(--muted);
     transition:
       background var(--dur) var(--ease),
-      color var(--dur) var(--ease);
+      color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease);
   }
 
   button[data-theme-option='dark'] {
-    background: var(--accent-grad);
+    background: var(--glass-pill);
     color: var(--on-accent);
+    box-shadow: var(--glass-pill-shadow);
   }
 
   :global(:root[data-theme='light']) button[data-theme-option='dark'] {
     background: transparent;
     color: var(--muted);
+    box-shadow: none;
   }
 
   :global(:root[data-theme='light']) button[data-theme-option='light'] {
-    background: var(--accent-grad);
+    background: var(--glass-pill);
     color: var(--on-accent);
+    box-shadow: var(--glass-pill-shadow);
   }
 
   svg {

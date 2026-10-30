@@ -38,7 +38,8 @@ body::before {
   pointer-events: none;
   background:
     radial-gradient(900px 560px at 30% 4%, var(--glow-1), transparent 70%),
-    radial-gradient(760px 620px at 96% 46%, var(--glow-2), transparent 72%);
+    radial-gradient(760px 620px at 96% 46%, var(--glow-2), transparent 72%),
+    radial-gradient(680px 520px at 12% 92%, var(--glow-3), transparent 70%);
 }
 
 img,
@@ -115,16 +116,32 @@ a:hover {
   box-shadow: var(--shadow);
 }
 
-:root[data-theme='dark'] .card::before,
-:root:not([data-theme]) .card::before {
+/* Liquid glass: blur what's behind the panel and trace its edge with a specular rim. */
+.card,
+.fact-card,
+.visual {
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+.card::after,
+.fact-card::after,
+.visual::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 24px;
-  right: 24px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.14);
+  inset: -1px;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  background: var(--glass-rim) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0);
   pointer-events: none;
+}
+
+/* .visual clips to its padding box, so its rim sits just inside the border. */
+.visual::after {
+  inset: 0;
 }
 
 .chip {
@@ -166,11 +183,13 @@ a:hover {
 }
 
 .fact-card {
+  position: relative;
   min-height: 62px;
   padding: 13px 16px;
   background: var(--card-grad);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  box-shadow: var(--glass-sheen);
 }
 
 .fact-card__label {

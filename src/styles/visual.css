@@ -1,6 +1,7 @@
 /* Shared shell for every diagram island. Pair with the components in src/components/ui/. */
 
 .visual {
+  position: relative;
   container-type: inline-size;
   width: 100%;
   color: var(--text);
@@ -23,6 +24,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
+  box-shadow: var(--glass-sheen);
 }
 
 /* Small uppercase label for control groups, columns, and panels. */

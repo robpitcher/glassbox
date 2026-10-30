@@ -299,8 +299,9 @@
     align-items: center;
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-pill);
-    background: var(--faint);
-    transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+    background: var(--glass-track);
+    box-shadow: var(--glass-track-shadow);
+    transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
   }
 
   .switch-track span {
@@ -309,17 +310,19 @@
     width: 1.08rem;
     height: 1.08rem;
     border-radius: var(--radius-pill);
-    background: var(--muted);
+    border: 1px solid var(--glass-knob-border);
+    background: var(--glass-knob);
+    box-shadow: inset 0 -1px 1px rgba(15, 23, 42, 0.12), 0 2px 5px rgba(0, 0, 0, 0.3);
     transition: transform var(--dur) var(--ease), background var(--dur) var(--ease);
   }
 
   .switch.active .switch-track {
     border-color: color-mix(in srgb, var(--accent) 75%, var(--border));
-    background: var(--accent);
+    background: var(--glass-pill);
+    box-shadow: var(--glass-pill-shadow);
   }
 
   .switch.active .switch-track span {
-    background: var(--on-accent);
     transform: translateX(1.38rem);
   }
 
