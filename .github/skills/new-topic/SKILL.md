@@ -1,6 +1,6 @@
 ---
 name: new-topic
-description: Build a new Visual Aids topic page (MDX plus a Svelte diagram island) from a GitHub issue or a request so it matches the existing pages. Use when adding a topic, explainer, or visual to this site.
+description: Build a new Glassbox topic page (MDX plus a Svelte diagram island) from a GitHub issue or a request so it matches the existing pages. Use when adding a topic, explainer, or visual to this site.
 ---
 
 # New topic

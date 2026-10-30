@@ -1,6 +1,6 @@
-# Visual Aids
+# Glassbox
 
-Visual Aids is a static Astro wiki for interactive visual explanations of cloud, AI, and developer tooling concepts. Each topic is a short MDX page paired with focused diagram islands.
+Glassbox is a static Astro wiki of interactive diagrams that open up cloud, AI, and developer tooling to show how the parts fit together. Each topic is a short MDX page paired with focused diagram islands.
 
 ## Stack
 
@@ -37,7 +37,7 @@ The configuration runs **Setup** (`pnpm install --frozen-lockfile`) when a sessi
 - **Build** builds the production site and Pagefind search index.
 - **Preview build** serves the most recent production build. Run **Build** first and rerun it after changes to refresh the preview.
 
-For local validation, run **Typecheck**, then **Build**, then **Preview build**. The app opens the detected server URL, including the `/visual` base path, in its browser. Use the production preview to verify navigation, interactive diagrams, and search; the development server does not build the search index.
+For local validation, run **Typecheck**, then **Build**, then **Preview build**. The app opens the detected server URL, including the `/glassbox` base path, in its browser. Use the production preview to verify navigation, interactive diagrams, and search; the development server does not build the search index.
 
 All configured commands use pnpm directly without platform-specific shell syntax and work on both Windows and macOS. Dependency installation respects your configured registry.
 

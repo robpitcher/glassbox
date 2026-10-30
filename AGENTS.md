@@ -1,4 +1,4 @@
-# Visual Aids: agent instructions
+# Glassbox: agent instructions
 
 A static Astro 7 + Svelte 5 wiki of interactive explainers for GitHub, Copilot, Azure, and developer-tooling concepts. Each topic is one MDX page with one or more Svelte diagram islands. Readers are developers and GitHub admins with some experience.
 
@@ -8,7 +8,7 @@ Use pnpm (Node 24, pnpm 12). If `pnpm` isn't on PATH, run `corepack enable` once
 
 - `pnpm typecheck`: Astro sync, then `tsc --noEmit`. `astro check` doesn't support TypeScript 7, so don't use it.
 - `pnpm build`: production build plus the Pagefind search index.
-- `pnpm preview`: serves the last build at `http://localhost:4321/visual/`. Rebuild after every change. Search only works here, not in `pnpm dev`.
+- `pnpm preview`: serves the last build at `http://localhost:4321/glassbox/`. Rebuild after every change. Search only works here, not in `pnpm dev`.
 - `pnpm shots [category/slug ...]`: after `pnpm build`, screenshots each page (or all pages) at 375, 650, and 1440px in dark and light into `shots/`, and fails if anything scrolls sideways.
 - `pnpm interact [category/slug ...]`: after `pnpm build`, presses Enter on every selectable item in every `.visual` section and toggle state. It fails unless the item becomes `aria-pressed`, the info bar changes, and Esc resets both. It also saves one screenshot per section and state as `shots/<slug>/interact-*.png`.
 - `pnpm mockup-shots mockups/<name>.html["?query"] ...`: screenshots throwaway HTML mockups in dark and light. Mockups live in the gitignored `mockups/` folder; start from `scripts/mockup/template.html`, which links `scripts/mockup/mockup.css` (the real tokens plus look-alike shared blocks).
@@ -38,7 +38,7 @@ To add a new topic, follow the `new-topic` skill in `.github/skills/new-topic/SK
   - `updated`: today's date.
   - `breadcrumb`, `order`, `badge`, and `art` as needed.
   - `badge: "New"` marks recent topics. When you touch the topics, check when each badged page was added (`git log --diff-filter=A --format=%ad -- <file>.mdx`). If it was more than a month ago, suggest removing the badge, but don't remove it without asking.
-- **Links between topics** in MDX: `import { withBase } from '/src/lib/url';` and write `<a href={withBase('/github/<slug>/')}>`. Never hard-code `/visual/` or use a root-relative Markdown link.
+- **Links between topics** in MDX: `import { withBase } from '/src/lib/url';` and write `<a href={withBase('/github/<slug>/')}>`. Never hard-code `/glassbox/` or use a root-relative Markdown link.
 - **No intro paragraph** under the title. Open with `FactCards` (4 short label/value pairs), then the visual.
 - **Visual sections** are cards with a numbered badge, a short heading, and one line of explanation (see `HierarchyExplorer.svelte`).
 - **After the visual**, add short `##` sections with bulleted explanations. These must make sense without JavaScript, because they are the noninteractive version of the visual.

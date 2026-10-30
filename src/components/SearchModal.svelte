@@ -311,7 +311,7 @@
 >
   <section class="search-panel" aria-describedby="search-help">
     <header class="search-header">
-      <h2 id="search-title">Search Visual Aids</h2>
+      <h2 id="search-title">Search Glassbox</h2>
       <kbd>Esc</kbd>
     </header>
 
