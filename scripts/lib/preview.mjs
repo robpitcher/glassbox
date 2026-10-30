@@ -16,7 +16,7 @@ export async function startPreview() {
       probe.close(() => resolve(port));
     });
   });
-  const base = `http://127.0.0.1:${port}/visual/`;
+  const base = `http://127.0.0.1:${port}/glassbox/`;
   const astro = path.join(root, 'node_modules/astro/bin/astro.mjs');
   // --ignore-lock keeps astro in the foreground (it backgrounds itself under agents) so kill() stops it.
   const server = spawn(process.execPath, [astro, 'preview', '--ignore-lock', '--host', '127.0.0.1', '--port', String(port)], {

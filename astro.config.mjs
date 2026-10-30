@@ -5,7 +5,7 @@ import mdx from '@astrojs/mdx';
 
 export default defineConfig({
   site: 'https://robpitcher.github.io',
-  base: '/visual',
+  base: '/glassbox',
   trailingSlash: 'ignore',
   integrations: [svelte(), mdx()],
 });

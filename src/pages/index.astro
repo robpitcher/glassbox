@@ -8,11 +8,11 @@ const topics = (await getCollection('topics')).sort((a, b) => a.data.order - b.d
 const categories = [...new Set(topics.map((topic) => topic.data.category))];
 ---
 
-<Base title="Visual Aids" description="Interactive diagrams that explain cloud, AI and developer tooling concepts — one idea per visual.">
+<Base title="Glassbox" description="Interactive diagrams that open up cloud, AI and developer tooling to show how the parts fit together, one idea at a time.">
   <section class="content-frame home-hero" aria-labelledby="home-title">
-    <p class="eyebrow">Visual Aids · A living wiki</p>
-    <h1 id="home-title">Complex topics, drawn simply.</h1>
-    <p class="home-hero__subtitle">Interactive diagrams that explain cloud, AI and developer tooling concepts — one idea per visual.</p>
+    <p class="eyebrow">Glassbox · A living wiki</p>
+    <h1 id="home-title">See inside the tools you build with.</h1>
+    <p class="home-hero__subtitle">Interactive diagrams that open up cloud, AI and developer tooling to show how the parts fit together, one idea at a time.</p>
 
     {categories.length > 1 && (
       <div class="home-filters" role="group" aria-label="Filter by category" data-category-filters>
