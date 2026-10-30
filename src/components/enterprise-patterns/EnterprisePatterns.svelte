@@ -382,6 +382,10 @@
       var(--surface-solid);
   }
 
+  .node.is-lit {
+    border-color: color-mix(in srgb, var(--accent) 75%, var(--border));
+  }
+
   .node.is-selected {
     border-color: var(--accent);
     background: color-mix(in srgb, var(--accent) 14%, var(--surface-solid));
@@ -451,6 +455,11 @@
     border-radius: var(--radius);
     background: var(--surface);
     transition: border-color var(--dur) var(--ease);
+  }
+
+  .pframe.is-lit,
+  .pframe.is-selected {
+    border-color: color-mix(in srgb, var(--accent) 75%, var(--border));
   }
 
   .pframe.is-dim {
