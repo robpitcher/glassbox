@@ -3,6 +3,7 @@ import BillingArt from './art/BillingArt.astro';
 import CopilotAccessArt from './art/CopilotAccessArt.astro';
 import CopilotPolicyArt from './art/CopilotPolicyArt.astro';
 import HierarchyArt from './art/HierarchyArt.astro';
+import ManagedSettingsArt from './art/ManagedSettingsArt.astro';
 import RequestLifecycleArt from './art/RequestLifecycleArt.astro';
 
 interface Props {
@@ -11,7 +12,7 @@ interface Props {
   summary: string;
   category: string;
   badge?: string;
-  art?: 'billing' | 'hierarchy' | 'copilot-access' | 'copilot-policy' | 'request-lifecycle';
+  art?: 'billing' | 'hierarchy' | 'copilot-access' | 'copilot-policy' | 'managed-settings' | 'request-lifecycle';
 }
 
 const { href, title, summary, category, badge, art } = Astro.props;
@@ -19,7 +20,7 @@ const { href, title, summary, category, badge, art } = Astro.props;
 
 <a class="topic-card card" href={href} data-category={category}>
   <span class="topic-card__art">
-    {art === 'billing' ? <BillingArt /> : art === 'hierarchy' ? <HierarchyArt /> : art === 'copilot-access' ? <CopilotAccessArt /> : art === 'copilot-policy' ? <CopilotPolicyArt /> : art === 'request-lifecycle' ? <RequestLifecycleArt /> : <span class="fallback-art" aria-hidden="true"></span>}
+    {art === 'billing' ? <BillingArt /> : art === 'hierarchy' ? <HierarchyArt /> : art === 'copilot-access' ? <CopilotAccessArt /> : art === 'copilot-policy' ? <CopilotPolicyArt /> : art === 'managed-settings' ? <ManagedSettingsArt /> : art === 'request-lifecycle' ? <RequestLifecycleArt /> : <span class="fallback-art" aria-hidden="true"></span>}
   </span>
   <span class="topic-card__meta">
     <span class="eyebrow">{category}</span>
