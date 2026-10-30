@@ -393,6 +393,32 @@
     --c: var(--cc-3);
   }
 
+  /* Wide layout: share row tracks across gates so titles, subtitles, and owner pills line up. */
+  @container (min-width: 721px) {
+    .track {
+      row-gap: 0;
+    }
+
+    .step,
+    .end {
+      grid-row: span 4;
+    }
+
+    .step,
+    .gate {
+      grid-template-rows: subgrid;
+    }
+
+    .gate {
+      grid-row: 1 / -1;
+      row-gap: 0.3rem;
+    }
+
+    .owner {
+      align-self: start;
+    }
+  }
+
   @container (max-width: 720px) {
     .track {
       --gap: 0.7rem;
