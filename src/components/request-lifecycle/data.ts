@@ -13,7 +13,7 @@ export interface Gate {
   id: GateId;
   name: string;
   sub: string;
-  owner: string;
+  owners: string[];
   enforcer: Enforcer;
   lead: string;
   text: string;
@@ -36,7 +36,7 @@ export const GATES: Gate[] = [
     id: 'seat',
     name: 'Seat',
     sub: 'Who licenses the user',
-    owner: 'Enterprise or org',
+    owners: ['Enterprise', 'Org'],
     enforcer: 'github',
     lead: 'Seat:',
     text: 'the enterprise or organization that grants the Copilot license decides whose policies apply to the user.',
@@ -45,7 +45,7 @@ export const GATES: Gate[] = [
     id: 'client',
     name: 'Client settings',
     sub: 'managed-settings.json',
-    owner: 'Enterprise or device admin',
+    owners: ['Enterprise', 'Device admin'],
     enforcer: 'client',
     lead: 'Client settings:',
     text: 'if deployed, managed settings make supported clients enforce rules such as MCP allowlists, tool permissions, and sandboxing.',
@@ -54,7 +54,7 @@ export const GATES: Gate[] = [
     id: 'policy',
     name: 'Feature policy',
     sub: 'Enabled, disabled, or delegated',
-    owner: 'Enterprise or org',
+    owners: ['Enterprise', 'Org'],
     enforcer: 'github',
     lead: 'Feature policy:',
     text: 'the enterprise enables or disables each feature, or lets organizations decide.',
@@ -63,7 +63,7 @@ export const GATES: Gate[] = [
     id: 'model',
     name: 'Model access',
     sub: 'Model policies',
-    owner: 'Enterprise or org',
+    owners: ['Enterprise', 'Org'],
     enforcer: 'github',
     lead: 'Model access:',
     text: 'each model is enabled, disabled, or follows the default availability policy; preview models start disabled.',
@@ -72,7 +72,7 @@ export const GATES: Gate[] = [
     id: 'budget',
     name: 'Credits and budgets',
     sub: 'Pool, paid usage, budgets if set',
-    owner: 'Owner or billing manager',
+    owners: ['Enterprise', 'Org', 'Billing manager'],
     enforcer: 'github',
     lead: 'Credits and budgets:',
     text: 'AI-credit usage draws on the included pool, then paid usage, unless a user-level budget or a hard spending limit stops it.',
@@ -141,6 +141,7 @@ export const LABELS = {
   request: 'Request',
   hint: 'Select a gate for detail',
   gate: 'Gate',
+  setBy: 'Set by',
   passed: 'passed',
   stopped: 'stopped the request',
   notReached: 'not reached',

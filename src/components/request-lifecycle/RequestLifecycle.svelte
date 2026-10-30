@@ -72,7 +72,7 @@
             type="button"
             class="gate {g.enforcer} {tone(g.id)}"
             aria-pressed={selected === g.id}
-            aria-label={`${LABELS.gate} ${i + 1}, ${g.name}: ${statusText(i)}. ${g.owner}.`}
+            aria-label={`${LABELS.gate} ${i + 1}, ${g.name}: ${statusText(i)}. ${LABELS.setBy}: ${g.owners.join(', ')}.`}
             onclick={() => select(g.id)}
           >
             <span class="top">
@@ -87,7 +87,9 @@
             </span>
             <span class="name">{g.name}</span>
             <span class="sub">{g.sub}</span>
-            <span class="owner">{g.owner}</span>
+            <span class="owners">
+              {#each g.owners as o (o)}<span class="owner">{o}</span>{/each}
+            </span>
           </button>
         </li>
       {/each}
@@ -262,17 +264,23 @@
     overflow-wrap: anywhere;
   }
 
-  .owner {
-    justify-self: start;
+  .owners {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
     margin-top: 0.35rem;
-    padding: 0.15rem 0.5rem;
-    border: 1px solid color-mix(in srgb, var(--c) 50%, transparent);
+  }
+
+  .owner {
+    padding: 0.15rem 0.55rem;
+    border: 1px solid color-mix(in srgb, var(--c) 70%, transparent);
     border-radius: var(--radius-pill);
-    background: color-mix(in srgb, var(--c) 10%, transparent);
-    color: var(--c);
-    font-size: 0.7rem;
-    font-weight: 750;
+    background: color-mix(in srgb, var(--c) 18%, var(--surface-solid));
+    color: var(--text);
+    font-size: 0.72rem;
+    font-weight: 700;
     line-height: 1.3;
+    white-space: nowrap;
   }
 
   .gate.github {
@@ -414,7 +422,7 @@
       row-gap: 0.3rem;
     }
 
-    .owner {
+    .owners {
       align-self: start;
     }
   }
@@ -455,13 +463,12 @@
       grid-column: 1;
     }
 
-    .owner {
+    .owners {
       grid-column: 2;
       grid-row: 2 / span 2;
       align-self: center;
-      justify-self: end;
+      justify-content: end;
       margin-top: 0;
-      text-align: right;
     }
 
     .end {
@@ -474,12 +481,11 @@
       grid-template-columns: minmax(0, 1fr);
     }
 
-    .owner {
+    .owners {
       grid-column: 1;
       grid-row: auto;
-      justify-self: start;
+      justify-content: start;
       margin-top: 0.3rem;
-      text-align: left;
     }
   }
 
