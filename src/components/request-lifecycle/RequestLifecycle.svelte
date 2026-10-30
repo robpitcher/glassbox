@@ -349,7 +349,7 @@
     border: 1px solid var(--bad);
     border-radius: var(--radius-pill);
     background: color-mix(in srgb, var(--bad) 10%, var(--surface-solid));
-    color: var(--bad);
+    color: var(--text);
     font-size: 0.82rem;
     font-weight: 800;
     line-height: 1.25;
@@ -359,7 +359,6 @@
   .outcome.ok {
     border-color: var(--ok);
     background: color-mix(in srgb, var(--ok) 10%, var(--surface-solid));
-    color: var(--ok);
   }
 
   /* Legend */
