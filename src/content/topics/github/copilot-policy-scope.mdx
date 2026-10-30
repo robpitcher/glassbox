@@ -1,0 +1,56 @@
+---
+title: "Copilot policy scope"
+shortTitle: "Copilot policy scope"
+navTitle: "Policy scope"
+category: "GitHub"
+summary: "Who sets a Copilot policy, and which setting wins when licenses overlap."
+order: 107
+badge: "New"
+art: "copilot-policy"
+breadcrumb:
+  - "GitHub"
+  - "Copilot"
+  - "Policy scope"
+updated: 2026-10-29
+---
+
+import FactCards from '/src/components/FactCards.astro';
+import PolicyScopeExplorer from '/src/components/copilot-policy/PolicyScopeExplorer.svelte';
+import { withBase } from '/src/lib/url';
+
+<FactCards
+  cards={[
+    { label: 'Set first by', value: 'The enterprise' },
+    { label: 'Enterprise options', value: 'Enable, disable, or delegate' },
+    { label: 'Orgs disagree', value: 'Depends on the policy' },
+    { label: 'Enterprises disagree', value: 'Most restrictive, almost always' },
+  ]}
+/>
+
+<PolicyScopeExplorer client:visible />
+
+## Who decides
+
+- **The enterprise goes first.** For most Copilot policies, an enterprise owner chooses to enable the policy everywhere, disable it everywhere, or let organizations decide.
+- **Organizations decide only when delegated.** If the enterprise enables or disables a policy, organization settings for it don't apply.
+- **Your license source sets your policies.** A person follows the policies of the enterprise or organization that grants their Copilot Business or Enterprise license. `mona` follows `acme-web`.
+- **Enterprise-assigned users have their own setting.** People licensed directly by the enterprise, like `ray` through an enterprise team, aren't covered by "Let organizations decide". The **Policies for enterprise-assigned users** setting chooses whether those policies default to enabled or disabled for them.
+- **A few policies cover everyone.** For example, blocking Copilot in the cloud applies on the enterprise's repositories no matter where the user's license comes from.
+
+## When licenses overlap
+
+- **Across organizations, each policy has a rule.** When `kai` gets a license from both `acme-web` and `acme-data`, most policies (such as Copilot CLI, Chat in the IDE, agent mode, and MCP servers) use the least restrictive setting. A few (such as suggestions matching public code and the Copilot Metrics API) use the most restrictive.
+- **Across enterprises, the most restrictive almost always wins.** AI credit paid usage and GitHub Spark are the exceptions.
+- **Personal plans don't conflict.** Copilot Pro or Pro+ is cancelled when someone gets a Business or Enterprise seat.
+- **Licensing itself** depends on where a person sits. See <a href={withBase('/github/account-enterprise-hierarchy/')}>GitHub enterprise hierarchy</a> and <a href={withBase('/github/copilot-access/')}>Copilot access with GHEC</a>.
+
+## New features and models
+
+- **Default policy for new features and clients** decides what happens to generally available features nobody has configured yet: let organizations decide, enable everywhere, or disable everywhere. It doesn't cover preview features.
+- **Default availability for released models** does the same for models set to follow the default policy. Preview and some other models stay disabled until you enable them.
+
+## Where to set them
+
+- **Enterprise:** the **AI controls** tab, under Agents, Copilot, and MCP. Organizations use their own Copilot settings for anything delegated.
+- **Watch for drift.** Check who holds policy access (enterprise owners and anyone with the "Manage enterprise AI controls" role), and review policy changes in the audit log.
+- **Related:** <a href={withBase('/github/copilot-managed-settings/')}>Copilot managed settings</a> for client-side configuration, <a href={withBase('/github/copilot-request-lifecycle/')}>the lifecycle of a Copilot request</a> for where policies sit among the other controls, and <a href={withBase('/github/copilot-usage-billing/')}>Copilot usage-based billing</a> for budgets. Non-Copilot enterprise policies, such as base permissions and rulesets, are tracked in <a href="https://github.com/robpitcher/visual/issues/19">issue #19</a>.
