@@ -158,7 +158,7 @@
     place-items: center;
     border-radius: var(--radius-pill);
     background: color-mix(in srgb, var(--c) 18%, transparent);
-    color: var(--c);
+    color: var(--text);
     font-size: 0.72rem;
     font-weight: 800;
   }
@@ -183,7 +183,7 @@
   }
 
   .paths code {
-    color: var(--c);
+    color: var(--text);
     overflow-wrap: anywhere;
   }
 
@@ -201,7 +201,7 @@
     padding: 0.15rem 0.5rem;
     border: 1px solid color-mix(in srgb, var(--ok) 45%, transparent);
     border-radius: var(--radius-pill);
-    color: var(--ok);
+    color: var(--text);
     font-size: 0.72rem;
     font-weight: 700;
   }
@@ -236,7 +236,7 @@
   }
 
   .json {
-    color: var(--cc-1);
+    color: var(--text);
   }
 
   .people {

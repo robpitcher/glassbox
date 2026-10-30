@@ -139,7 +139,7 @@
   }
 
   .key-line code {
-    color: var(--cc-1);
+    color: var(--text);
     font-weight: 700;
   }
 
@@ -222,7 +222,7 @@
   .tag.applies,
   .tag.ok {
     border-color: color-mix(in srgb, var(--ok) 45%, transparent);
-    color: var(--ok);
+    color: var(--text);
   }
 
   .tag.bad {

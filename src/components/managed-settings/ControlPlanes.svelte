@@ -141,7 +141,7 @@
 
   .cell-lane {
     display: none;
-    color: var(--c);
+    color: var(--text);
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.1em;
