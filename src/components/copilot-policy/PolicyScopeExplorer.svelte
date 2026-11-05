@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { tick } from 'svelte';
   import InfoBar from '../ui/InfoBar.svelte';
   import SectionHead from '../ui/SectionHead.svelte';
   import SegmentedToggle from '../ui/SegmentedToggle.svelte';
@@ -14,7 +13,6 @@
     POLICY_SHORT,
     enterpriseOptions,
     explain,
-    person,
     resolve,
     valueLabel,
     type Decider,
@@ -44,65 +42,13 @@
   }
 
   const policyOptions = (['cli', 'code'] as const).map((id) => ({ id, label: POLICY_SHORT[id] }));
-
-  let stage: HTMLDivElement | undefined = $state();
-  let size = $state({ w: 0, h: 0 });
-  let connections = $state<{ from: string; d: string }[]>([]);
-
-  function measure() {
-    if (!stage) return;
-    const bounds = stage.getBoundingClientRect();
-    size = { w: bounds.width, h: bounds.height };
-    if (!selected) {
-      connections = [];
-      return;
-    }
-
-    const target = stage.querySelector(`[data-person="${selected}"]`)!.getBoundingClientRect();
-    const licensedBy = person(selected).licensedBy;
-    const sources = licensedBy === 'enterprise' ? ['assigned'] : licensedBy;
-    const stacked = getComputedStyle(stage.querySelector('.levels')!).gridTemplateColumns.split(' ').length === 1;
-    connections = sources.map((from, index) => {
-      const source = stage!.querySelector(`[data-source="${from}"]`)!.getBoundingClientRect();
-      if (stacked) {
-        const x1 = source.left - bounds.left;
-        const y1 = source.top + source.height / 2 - bounds.top;
-        const x2 = target.left - bounds.left;
-        const y2 = target.top + target.height / 2 - bounds.top;
-        const gutter = 6 + index * 6;
-        return { from, d: `M${x1},${y1} H${gutter} V${y2} H${x2}` };
-      }
-
-      const x1 = source.left + source.width / 2 - bounds.left;
-      const y1 = source.bottom - bounds.top;
-      const x2 = target.left + target.width * (index + 1) / (sources.length + 1) - bounds.left;
-      const y2 = target.top - bounds.top;
-      const bend = y2 - 12 - index * 8;
-      return { from, d: `M${x1},${y1} V${bend} H${x2} V${y2}` };
-    });
-  }
-
-  $effect(() => {
-    void selected;
-    void policy;
-    void entState;
-    tick().then(measure);
-  });
-
-  $effect(() => {
-    if (!stage) return;
-    const observer = new ResizeObserver(measure);
-    observer.observe(stage);
-    stage.querySelectorAll('[data-source], [data-person]').forEach((node) => observer.observe(node));
-    return () => observer.disconnect();
-  });
 </script>
 
 <!--
   THESIS: The enterprise either decides a Copilot policy or hands it down; each person's result follows their license source, and a per-policy rule settles conflicts.
   OWN-WORLD: Midnight Glass blue system: Acme wraps its orgs and the enterprise-assigned bucket; people sit below with their result.
   STORY: Pick a policy and Acme's setting, then select a person to light up the level that decided for them.
-  FIRST VIEWPORT: Header, two control rows, the Acme box with three decision points, three people, and the conflict rule.
+  FIRST VIEWPORT: Header, two control rows, the Acme box with three decision points, the conflict rule, and three people.
   FORM: Responsive semantic HTML; each person is a keyboard-focusable toggle with a live one-line explanation underneath.
 -->
 {#snippet value(on: boolean, ignored = false)}
@@ -137,14 +83,7 @@
     <span class="visual-hint">Select a person</span>
   </div>
 
-  <div class="stage" bind:this={stage}>
-    {#if connections.length}
-      <svg class="connections" viewBox="0 0 {size.w} {size.h}" aria-hidden="true">
-        {#each connections as connection (connection.from)}
-          <path d={connection.d} />
-        {/each}
-      </svg>
-    {/if}
+  <div class="stage">
     <div class="enterprise {boxTone('enterprise')}">
       <div class="box-head">
         <span class="name"><span class="tag tag-enterprise">Enterprise</span><strong>{ENTERPRISE.name}</strong></span>
@@ -157,7 +96,7 @@
 
       <div class="levels">
         {#each ORGS as org (org)}
-          <div class="level {boxTone(org)}" data-source={org}>
+          <div class="level {boxTone(org)}">
             <div class="box-head">
               <span class="name"><span class="tag tag-org">Org</span><strong>{org}</strong></span>
               {@render value(ORG_SETTING[org], enforced)}
@@ -165,7 +104,7 @@
             <span class="sub">{enforced ? BOX_NOTES.orgLocked : BOX_NOTES.orgDelegated}</span>
           </div>
         {/each}
-        <div class="level assigned {boxTone('assigned')}" data-source="assigned">
+        <div class="level assigned {boxTone('assigned')}">
           <div class="box-head">
             <span class="name"><span class="tag tag-assigned">Enterprise-assigned</span></span>
             {@render value(ASSIGNED_SETTING, enforced)}
@@ -175,6 +114,14 @@
       </div>
     </div>
 
+    <p class="rule">
+      {#if enforced}
+        <span>Organization settings don’t apply</span>
+      {:else}
+        <span>If orgs disagree</span> <b>{pol.ruleLabel}</b>
+      {/if}
+    </p>
+
     <ul class="people" aria-label="People with Copilot licenses">
       {#each PEOPLE as p (p.id)}
         {@const r = resolve(entState, policy, p.id)}
@@ -182,7 +129,6 @@
           <button
             type="button"
             class="person {personTone(p.id)}"
-            data-person={p.id}
             aria-pressed={selected === p.id}
             aria-label={`${p.id}, ${p.source}, gets ${valueLabel(policy, r.on)}`}
             onclick={() => select(p.id)}
@@ -197,14 +143,6 @@
         </li>
       {/each}
     </ul>
-
-    <p class="rule">
-      {#if enforced}
-        <span>Organization settings don’t apply</span>
-      {:else}
-        <span>If orgs disagree</span> <b>{pol.ruleLabel}</b>
-      {/if}
-    </p>
   </div>
 
   <InfoBar lead={info.lead} text={info.text} note={info.note} />
@@ -227,25 +165,9 @@
   }
 
   .stage {
-    position: relative;
     display: grid;
     gap: 0.9rem;
     margin-top: 1.25rem;
-  }
-
-  .connections {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-  }
-
-  .connections path {
-    fill: none;
-    stroke: var(--accent-2);
-    stroke-width: 1.5;
-    stroke-dasharray: 5 5;
   }
 
   .is-lit,
@@ -426,7 +348,6 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.75rem;
     padding: 0;
-    padding-top: 1rem;
     list-style: none;
   }
 
@@ -517,10 +438,6 @@
   }
 
   @container (max-width: 760px) {
-    .stage {
-      padding-left: 1.25rem;
-    }
-
     .levels,
     .people {
       grid-template-columns: minmax(0, 1fr);
