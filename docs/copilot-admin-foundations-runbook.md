@@ -165,25 +165,26 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 
 ### Demo flow (≈7 min): prepared before/after, not a fleet rollout
 
-1. Open the prepared `copilot/managed-settings.json` and identify the enterprise-wide model default and the permission setting left unmanaged for team-specific configuration.
+1. Open the prepared `copilot/managed-settings.json` and identify the enterprise-wide model default and the permission settings left open for team-specific configuration.
 2. For server-managed delivery, show the selected source repository, team mapping, and team override. For device delivery, show the prepared location or a screenshot; team overrides require server-managed delivery.
-3. For server-managed delivery, compare the guardrail and new-conversation model defaults for a team member and a non-member on supported clients. For device delivery, demonstrate a supported setting instead. Use prepared before/after screenshots if the demo is not safe to run live.
+3. For server-managed delivery, compare the guardrails and new-conversation model defaults for a team member and a non-member on supported clients. For example, ask the agent to run `git push` in a disposable repository. For device delivery, demonstrate a supported setting instead. Use prepared before/after screenshots if the demo is not safe to run live.
 4. Explain how the source precedence and refresh behavior affect the demo. Do not deploy to or modify a live fleet.
 
-**Sample server-managed files:** Place these in the selected organization’s `.github-private` repository. Copilot Fusion is the enterprise-wide model default; the named enterprise team receives a different model default and the bypass-permissions guardrail. Verify the team slug, support for the permission key and both model choices in the demo client, and that enterprise policies allow those models before using them.
+**Sample server-managed files:** Place these in the selected organization’s `.github-private` repository. Copilot Fusion is the enterprise-wide model default; the named enterprise team receives a different model default, the bypass-permissions guardrail, and shell command deny rules. Verify the team slug, support for the permission keys and both model choices in the demo client, and that enterprise policies allow those models before using them.
 
 **Enterprise defaults: `copilot/managed-settings.json`**
 
 ```json
 {
   "permissions": {
-    "disableBypassPermissionsMode": { "overridable": "unmanaged" }
+    "disableBypassPermissionsMode": { "overridable": "unmanaged" },
+    "deny": { "overridable": [] }
   },
   "model": { "overridable": "fusion" }
 }
 ```
 
-`unmanaged` means this enterprise default does not disable bypass mode; it does not force bypass mode on or remove restrictions from other policy layers. The `overridable` wrapper makes the key eligible for configuration in the team file.
+`unmanaged` means this enterprise default does not disable bypass mode; it does not force bypass mode on or remove restrictions from other policy layers. The empty `deny` list adds no enterprise-wide deny rules. The `overridable` wrapper makes each key eligible for configuration in the team file.
 
 **Team mapping: `copilot/team-mappings.json`**
 
@@ -198,13 +199,22 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 ```json
 {
   "permissions": {
-    "disableBypassPermissionsMode": "disable"
+    "disableBypassPermissionsMode": "disable",
+    "deny": [
+      "Shell(git push *)",
+      "Shell(rm *)"
+    ]
   },
   "model": "claude-sonnet-5.5"
 }
 ```
 
-For an eligible user outside the mapped team, this example adds no bypass-permission restriction and new conversations default to Copilot Fusion. For an eligible `sg-gh-ghcp-standalone` member, bypass-permission mode is disabled and new conversations default to Claude Sonnet 5.5. `model` sets a default, not an allowlist: users can select a different available model for a conversation.
+For an eligible user outside the mapped team, this example adds no permission restrictions and new conversations default to Copilot Fusion. For an eligible `sg-gh-ghcp-standalone` member, bypass-permission mode is disabled, the agent cannot run shell commands that start with `git push` or `rm`, and new conversations default to Claude Sonnet 5.5. `model` sets a default, not an allowlist: users can select a different available model for a conversation.
+
+- `Shell(<command> *)` matches a command prefix; without ` *`, a rule matches exact text. `PowerShell(...)` rules match case-insensitively, and `Read(...)`, `Edit(...)`, and `Domain(...)` restrict file and network access.
+- A deny rule wins over matching `ask` or `allow` rules. Use `ask` instead when the team should approve each `git push` rather than never run it.
+- Once a managed source defines a permission rule for a user, other supported operations that match no rule require approval, so team members may see more prompts.
+- Granular permission rules are not supported in every client; in VS Code they apply only to Agent Host sessions. Check the client coverage table before relying on them.
 
 This comparison assumes no other team override or managed policy affects the test users. Multiple mapped team memberships can affect the resulting settings, but a `"disable"` for `permissions.disableBypassPermissionsMode` from any policy layer remains effective. If the team has no override for an overridable key, the enterprise default applies.
 
