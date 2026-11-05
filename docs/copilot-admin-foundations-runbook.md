@@ -52,6 +52,7 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 
 - [ ] Prepare the `managed-settings.json` example in Segment 3 and a client state that visibly demonstrates the setting before and after.
 - [ ] For server-managed settings, confirm the enterprise’s selected source organization and `.github-private` repository. Do not switch a live enterprise’s source organization just for a demo.
+- [ ] For the team-override demo, prepare licensed test users inside and outside the `sg-gh-ghcp-standalone` enterprise team. Verify the team slug, client support, and availability of the example model defaults.
 - [ ] If using a local file or MDM, prepare a demo device and verify its policy location for that operating system.
 - [ ] Record the original value of every policy or budget you will change; prepare the exact reset action.
 - [ ] Capture fallback screenshots of the enterprise controls, client behavior, and populated AI usage page.
@@ -64,7 +65,8 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 | Enterprise | `<enterprise slug>` |
 | Source organization and private repository | `<org> / .github-private` or `<not applicable>` |
 | Target organization/team | `<org/team>` |
-| Demo user and seat source | `<test account> / <enterprise or org>` |
+| Managed-settings enterprise team | `sg-gh-ghcp-standalone` |
+| Demo users and seat source | `<team member and non-member> / <enterprise or org>` |
 | Client, version, and OS | `<client> / <version> / <OS>` |
 | Budget scope and cleanup owner | `<scope> / <name>` |
 
@@ -163,20 +165,45 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 
 ### Demo flow (≈7 min): prepared before/after, not a fleet rollout
 
-1. Open the prepared JSON file and explain the sample setting.
-2. For server-managed delivery, show the selected source repository and `copilot/managed-settings.json`; for device delivery, show the prepared location or a screenshot.
-3. In the client, show the before/after behavior for the selected supported key.
+1. Open the prepared `copilot/managed-settings.json` and identify the enterprise-wide permission guardrail and default model.
+2. For server-managed delivery, show the selected source repository, team mapping, and team override. For device delivery, show the prepared location or a screenshot; team overrides require server-managed delivery.
+3. For server-managed delivery, compare the guardrail and new-conversation model defaults for a team member and a non-member on supported clients. For device delivery, demonstrate a supported setting instead. Use prepared before/after screenshots if the demo is not safe to run live.
 4. Explain how the source precedence and refresh behavior affect the demo. Do not deploy to or modify a live fleet.
 
-**Sample file:** This demonstrates a permission guardrail. Check the key’s current coverage and supported values for the specific demo client before using it.
+**Sample server-managed files:** Place these in the selected organization’s `.github-private` repository. The permission guardrail applies to all eligible users on supported clients; the model default can be overridden for the named enterprise team. Verify the team slug and that Auto and Copilot Fusion are available in the demo client and enterprise before using them.
+
+**Everyone: `copilot/managed-settings.json`**
 
 ```json
 {
   "permissions": {
     "disableBypassPermissionsMode": "disable"
-  }
+  },
+  "model": { "overridable": "auto" }
 }
 ```
+
+**Team mapping: `copilot/team-mappings.json`**
+
+```json
+{
+  "sg-gh-ghcp-standalone.json": ["sg-gh-ghcp-standalone"]
+}
+```
+
+**Team override: `copilot/teams/sg-gh-ghcp-standalone.json`**
+
+```json
+{
+  "model": "fusion"
+}
+```
+
+For an eligible user outside the mapped team, bypass-permission mode is disabled and new conversations default to Auto. For an eligible `sg-gh-ghcp-standalone` member, the same guardrail applies, but new conversations default to Copilot Fusion. `model` sets a default, not an allowlist: users can select a different available model for a conversation.
+
+This comparison assumes no other team override or higher-priority MDM setting affects the test users. A user in multiple mapped enterprise teams receives the combined team settings using the least restrictive value for each key; platform policies still apply. If the team has no override for an overridable key, the enterprise default applies.
+
+For file-based delivery, use plain values such as `"model": "auto"` instead of the `overridable` wrapper. Native MDM uses individual policy values and can target device groups; neither device-delivery method uses the enterprise team mapping.
 
 ### Likely questions
 
@@ -322,7 +349,7 @@ Use cost centers for group attribution and cost controls; confirm how members ar
 ## Post-session reset
 
 - [ ] Restore each changed enterprise and organization policy to its recorded original value.
-- [ ] Revert the demo commit or remove the test settings from the selected source repository; verify that the intended managed-settings file is restored.
+- [ ] Revert the demo commit or remove the test settings from the selected source repository; verify that the managed settings, team mapping, and team override files are restored or removed as appropriate.
 - [ ] Remove demo budgets and cost-center test data that were created for the session.
 - [ ] Confirm that production policies and billing controls were not changed.
 - [ ] Sign out test users and clear presenter notes from shared screens.
