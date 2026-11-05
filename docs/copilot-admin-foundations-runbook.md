@@ -170,7 +170,7 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 3. For server-managed delivery, compare the guardrail and new-conversation model defaults for a team member and a non-member on supported clients. For device delivery, demonstrate a supported setting instead. Use prepared before/after screenshots if the demo is not safe to run live.
 4. Explain how the source precedence and refresh behavior affect the demo. Do not deploy to or modify a live fleet.
 
-**Sample server-managed files:** Place these in the selected organization’s `.github-private` repository. The permission guardrail applies to all eligible users on supported clients; the model default can be overridden for the named enterprise team. Verify the team slug and that Auto and Copilot Fusion are available in the demo client and enterprise before using them.
+**Sample server-managed files:** Place these in the selected organization’s `.github-private` repository. The permission guardrail applies to all eligible users on supported clients; the model default can be overridden for the named enterprise team. Verify the team slug, client support for Copilot Fusion and Claude Sonnet 5.5, and that enterprise policies allow both before using them.
 
 **Everyone: `copilot/managed-settings.json`**
 
@@ -179,7 +179,7 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
   "permissions": {
     "disableBypassPermissionsMode": "disable"
   },
-  "model": { "overridable": "auto" }
+  "model": { "overridable": "fusion" }
 }
 ```
 
@@ -195,15 +195,15 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 
 ```json
 {
-  "model": "fusion"
+  "model": "claude-sonnet-5.5"
 }
 ```
 
-For an eligible user outside the mapped team, bypass-permission mode is disabled and new conversations default to Auto. For an eligible `sg-gh-ghcp-standalone` member, the same guardrail applies, but new conversations default to Copilot Fusion. `model` sets a default, not an allowlist: users can select a different available model for a conversation.
+For an eligible user outside the mapped team, bypass-permission mode is disabled and new conversations default to Copilot Fusion. For an eligible `sg-gh-ghcp-standalone` member, the same guardrail applies, but new conversations default to Claude Sonnet 5.5. `model` sets a default, not an allowlist: users can select a different available model for a conversation.
 
 This comparison assumes no other team override or higher-priority MDM setting affects the test users. A user in multiple mapped enterprise teams receives the combined team settings using the least restrictive value for each key; platform policies still apply. If the team has no override for an overridable key, the enterprise default applies.
 
-For file-based delivery, use plain values such as `"model": "auto"` instead of the `overridable` wrapper. Native MDM uses individual policy values and can target device groups; neither device-delivery method uses the enterprise team mapping.
+For file-based delivery, use plain values such as `"model": "fusion"` instead of the `overridable` wrapper. Native MDM uses individual policy values and can target device groups; neither device-delivery method uses the enterprise team mapping.
 
 ### Likely questions
 
@@ -374,6 +374,8 @@ Recheck these official sources before delivery. The most useful client detail is
 - [Choosing how to deploy enterprise-managed settings to users](https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-enterprise/use-managed-settings/deploy-managed-settings)
 - [Overriding enterprise-managed settings for enterprise teams](https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-enterprise/use-managed-settings/override-settings-for-teams)
 - [Enterprise managed settings: supported keys and client coverage](https://docs.github.com/en/copilot/reference/enterprise-administrators/enterprise-managed-settings)
+- [Supported AI models and client availability](https://docs.github.com/en/copilot/reference/ai-models/supported-models)
+- [Copilot CLI command reference and model identifiers](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference)
 - [Changelog: Enterprise-managed settings GA](https://github.blog/changelog/2026-07-01-enterprise-managed-settings-json-is-generally-available/)
 - [Changelog: MDM and file-based managed settings](https://github.blog/changelog/2026-07-08-deploy-managed-copilot-settings-via-mdm-in-vs-code-and-cli/)
 - [Changelog: Managed settings for Copilot app and cloud agent](https://github.blog/changelog/2026-07-27-enterprise-managed-settings-now-apply-to-the-github-copilot-app/)
