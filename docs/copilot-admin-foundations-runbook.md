@@ -52,6 +52,7 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 
 - [ ] Prepare the `managed-settings.json` example in Segment 3 and a client state that visibly demonstrates the setting before and after.
 - [ ] For server-managed settings, confirm the enterprise’s selected source organization and `.github-private` repository. Do not switch a live enterprise’s source organization just for a demo.
+- [ ] For the team-override demo, prepare licensed test users inside and outside the `sg-gh-ghcp-standalone` enterprise team. Verify the team slug, client support, and availability of the example model defaults.
 - [ ] If using a local file or MDM, prepare a demo device and verify its policy location for that operating system.
 - [ ] Record the original value of every policy or budget you will change; prepare the exact reset action.
 - [ ] Capture fallback screenshots of the enterprise controls, client behavior, and populated AI usage page.
@@ -64,7 +65,8 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 | Enterprise | `<enterprise slug>` |
 | Source organization and private repository | `<org> / .github-private` or `<not applicable>` |
 | Target organization/team | `<org/team>` |
-| Demo user and seat source | `<test account> / <enterprise or org>` |
+| Managed-settings enterprise team | `sg-gh-ghcp-standalone` |
+| Demo users and seat source | `<team member and non-member> / <enterprise or org>` |
 | Client, version, and OS | `<client> / <version> / <OS>` |
 | Budget scope and cleanup owner | `<scope> / <name>` |
 
@@ -155,7 +157,7 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 | Linux | `/etc/github-copilot/managed-settings.json` |
 
 - Native MDM is supported on Windows and macOS: Windows uses string values under `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\GitHubCopilot`; macOS uses forced managed preferences in the `com.github.copilot` domain. Native MDM is not supported on Linux.
-- When sources overlap, precedence is MDM → server-managed → file-based → user-level settings. `sandbox` and `permissions.deny`, `permissions.ask`, and `permissions.allow` compose in the most restrictive direction across sources.
+- When sources overlap, precedence is MDM → server-managed → file-based → user-level settings. `sandbox` and `permissions.deny`, `permissions.ask`, and `permissions.allow` compose in the most restrictive direction across sources. For `permissions.disableBypassPermissionsMode`, a `"disable"` from any policy layer wins and cannot be relaxed by a team override.
 - Server-managed updates apply automatically within about an hour; restarting or signing in again triggers an immediate refresh. File-based settings are loaded when supported clients restart. MDM policies are checked periodically; VS Code also has **Developer: Sync Account Policy** for testing.
 - For supported clients, `forceRemoteSettingsRefresh` can require a fresh server-managed settings fetch on startup; check the key's current client support before relying on it for a time-sensitive change.
 - For Copilot CLI file-based settings on macOS and Linux, the file must be a regular file owned by `root` and must not be group- or world-writable.
@@ -163,20 +165,50 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 
 ### Demo flow (≈7 min): prepared before/after, not a fleet rollout
 
-1. Open the prepared JSON file and explain the sample setting.
-2. For server-managed delivery, show the selected source repository and `copilot/managed-settings.json`; for device delivery, show the prepared location or a screenshot.
-3. In the client, show the before/after behavior for the selected supported key.
+1. Open the prepared `copilot/managed-settings.json` and identify the enterprise-wide model default and the permission settings left open for team-specific configuration.
+2. For server-managed delivery, show the selected source repository, team mapping, and team override. For device delivery, show the prepared location or a screenshot; team overrides require server-managed delivery.
+3. For server-managed delivery, compare the bypass-permissions guardrail and new-conversation model defaults for a team member and a non-member on supported clients. For device delivery, demonstrate a supported setting instead. Use prepared before/after screenshots if the demo is not safe to run live.
 4. Explain how the source precedence and refresh behavior affect the demo. Do not deploy to or modify a live fleet.
 
-**Sample file:** This demonstrates a permission guardrail. Check the key’s current coverage and supported values for the specific demo client before using it.
+**Sample server-managed files:** Place these in the selected organization’s `.github-private` repository. Copilot Fusion is the enterprise-wide model default; the named enterprise team receives a different model default and the bypass-permissions guardrail. Verify the team slug, support for the permission key and both model choices in the demo client, and that enterprise policies allow those models before using them.
+
+**Enterprise defaults: `copilot/managed-settings.json`**
+
+```json
+{
+  "permissions": {
+    "disableBypassPermissionsMode": { "overridable": "unmanaged" }
+  },
+  "model": { "overridable": "fusion" }
+}
+```
+
+`unmanaged` means this enterprise default does not disable bypass mode; it does not force bypass mode on or remove restrictions from other policy layers. The `overridable` wrapper makes the key eligible for configuration in the team file.
+
+**Team mapping: `copilot/team-mappings.json`**
+
+```json
+{
+  "sg-gh-ghcp-standalone.json": ["sg-gh-ghcp-standalone"]
+}
+```
+
+**Team override: `copilot/teams/sg-gh-ghcp-standalone.json`**
 
 ```json
 {
   "permissions": {
     "disableBypassPermissionsMode": "disable"
-  }
+  },
+  "model": "claude-sonnet-5.5"
 }
 ```
+
+For an eligible user outside the mapped team, this example adds no bypass-permission restriction and new conversations default to Copilot Fusion. For an eligible `sg-gh-ghcp-standalone` member, bypass-permission mode is disabled and new conversations default to Claude Sonnet 5.5. `model` sets a default, not an allowlist: users can select a different available model for a conversation.
+
+This comparison assumes no other team override or managed policy affects the test users. Multiple mapped team memberships can affect the resulting settings, but a `"disable"` for `permissions.disableBypassPermissionsMode` from any policy layer remains effective. If the team has no override for an overridable key, the enterprise default applies.
+
+For file-based delivery, use plain values such as `"model": "fusion"` instead of the `overridable` wrapper. Native MDM uses individual policy values and can target device groups; neither device-delivery method uses the enterprise team mapping.
 
 ### Likely questions
 
@@ -322,7 +354,7 @@ Use cost centers for group attribution and cost controls; confirm how members ar
 ## Post-session reset
 
 - [ ] Restore each changed enterprise and organization policy to its recorded original value.
-- [ ] Revert the demo commit or remove the test settings from the selected source repository; verify that the intended managed-settings file is restored.
+- [ ] Revert the demo commit or remove the test settings from the selected source repository; verify that the managed settings, team mapping, and team override files are restored or removed as appropriate.
 - [ ] Remove demo budgets and cost-center test data that were created for the session.
 - [ ] Confirm that production policies and billing controls were not changed.
 - [ ] Sign out test users and clear presenter notes from shared screens.
@@ -347,6 +379,8 @@ Recheck these official sources before delivery. The most useful client detail is
 - [Choosing how to deploy enterprise-managed settings to users](https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-enterprise/use-managed-settings/deploy-managed-settings)
 - [Overriding enterprise-managed settings for enterprise teams](https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-enterprise/use-managed-settings/override-settings-for-teams)
 - [Enterprise managed settings: supported keys and client coverage](https://docs.github.com/en/copilot/reference/enterprise-administrators/enterprise-managed-settings)
+- [Supported AI models and client availability](https://docs.github.com/en/copilot/reference/ai-models/supported-models)
+- [Copilot CLI command reference and model identifiers](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference)
 - [Changelog: Enterprise-managed settings GA](https://github.blog/changelog/2026-07-01-enterprise-managed-settings-json-is-generally-available/)
 - [Changelog: MDM and file-based managed settings](https://github.blog/changelog/2026-07-08-deploy-managed-copilot-settings-via-mdm-in-vs-code-and-cli/)
 - [Changelog: Managed settings for Copilot app and cloud agent](https://github.blog/changelog/2026-07-27-enterprise-managed-settings-now-apply-to-the-github-copilot-app/)
