@@ -3,7 +3,7 @@
 **Audience:** GitHub enterprise and organization administrators
 **Length:** 60 minutes (50 minutes of content, with 10 minutes protected for Q&A)
 **Format:** Demo-led, with brief visual aids for abstract concepts
-**Documentation checked:** 2026-10-29. GitHub product behavior and labels can change; recheck linked docs before each delivery.
+**Documentation checked:** 2026-11-05. GitHub product behavior and labels can change; recheck linked docs before each delivery.
 
 > **Presenter note:** Replace the `<placeholders>` with details for the demo environment. Do not make live policy or budget changes in production. Keep the approved outline and protect the final 10 minutes for questions.
 
@@ -72,7 +72,7 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 
 **Key point:** Choose the level that owns each decision before changing a setting.
 
-**🖼️ Visual:** Enterprise hierarchy — show the existing [account and enterprise hierarchy page](../src/content/topics/github/account-enterprise-hierarchy.mdx). Keep the explanation to enterprise → organizations → teams and repositories → people.
+**🖼️ Visual:** Enterprise hierarchy — show the existing [account and enterprise hierarchy page](https://robpitcher.github.io/glassbox/github/account-enterprise-hierarchy/). Keep the explanation to enterprise → organizations → teams and repositories → people.
 
 ### Demo / presenter path
 
@@ -114,17 +114,21 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 ### Talking points
 
 - Enterprise administrators can set a policy or let organizations decide when that state is available. An organization cannot override an enterprise-enforced decision.
+- "Let organizations decide" does not cover users licensed directly by the enterprise; a separate **Policies for enterprise-assigned users** setting controls their default.
 - For a user with licenses from multiple organizations, the least restrictive setting generally applies, with exceptions for sensitive policies. Policies across multiple enterprises generally use the most restrictive setting, also with exceptions.
 - Default-availability policies affect unconfigured generally available features and models. They are separate from explicitly configuring each feature/model.
+- Governance also includes privacy decisions such as **Suggestions matching public code** and content exclusion. Content exclusion behavior varies by client and is not a substitute for access controls; mention it without attempting a full configuration walkthrough.
 - Choose a small set of demonstrable controls: one surface or feature, one model, and—if relevant—an agent or MCP control. Do not tour every toggle.
 - Copilot audit logs record Copilot plan changes such as policy changes and seat changes, plus agent activity on GitHub.com. They do **not** contain users’ local prompts or local client session data.
 - Enterprise audit logs retain 180 days; streaming to a SIEM is the route for longer retention and alerting.
+- Reduce policy drift by reviewing who can manage AI controls (enterprise owners and users with the **Manage enterprise AI controls** custom role permission) and monitoring changes in the audit log.
 
 ### Likely questions
 
 - **Can an organization turn on a feature the enterprise disabled?** Not when the enterprise has enforced the setting. If enterprise policy delegates the decision, organization policy and the relevant conflict rule determine access.
 - **Does the audit log let us read prompts?** No. It records administrative changes and agent activity on GitHub.com, not local Copilot session prompts.
 - **Should all new models and features be disabled by default?** That is a governance choice. Review the default-availability policy and explicitly restrict only what the organization needs to restrict.
+- **Does content exclusion replace repository permissions?** No. It limits Copilot's use of supported content on supported clients; retain normal access controls and check the client support matrix.
 
 **Fallback:** Use the pre-captured AI controls and audit log images. For policy conflict examples, use the policy-conflict documentation rather than inferring behavior from one user’s setup.
 **Transition:** “Policies define what is available. Next, let’s standardize supported behavior inside Copilot clients.”
@@ -139,7 +143,9 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 
 - `managed-settings.json` is an enterprise-managed settings schema for supported Copilot clients. Supported clients include Copilot CLI, VS Code, the GitHub Copilot app, Copilot in the cloud, and JetBrains IDEs, but **not every client supports every key**. Check the key-by-client support matrix before rollout.
 - Use it for supported client behavior such as default model, permission controls, approved plugins/marketplaces, MCP server restrictions, sandbox configuration, or telemetry. The available keys and their client coverage change; do not treat this list as universal.
+- For a governance example, demonstrate a supported permission guardrail such as `permissions.disableBypassPermissionsMode`; use a model default only as a client-preference example.
 - Server-managed settings live at `copilot/managed-settings.json` in the selected organization’s `.github-private` repository. They apply to users licensed through the enterprise or one of its organizations.
+- Server-managed settings can support enterprise-team overrides for selected keys marked `overridable`; MDM and file-based deployment do not support those team overrides.
 - File-based locations are:
 
 | OS | `managed-settings.json` location |
@@ -151,6 +157,8 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 - Native MDM is supported on Windows and macOS: Windows uses string values under `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\GitHubCopilot`; macOS uses forced managed preferences in the `com.github.copilot` domain. Native MDM is not supported on Linux.
 - When sources overlap, precedence is MDM → server-managed → file-based → user-level settings. `sandbox` and `permissions.deny`, `permissions.ask`, and `permissions.allow` compose in the most restrictive direction across sources.
 - Server-managed updates apply automatically within about an hour; restarting or signing in again triggers an immediate refresh. File-based settings are loaded when supported clients restart. MDM policies are checked periodically; VS Code also has **Developer: Sync Account Policy** for testing.
+- For supported clients, `forceRemoteSettingsRefresh` can require a fresh server-managed settings fetch on startup; check the key's current client support before relying on it for a time-sensitive change.
+- For Copilot CLI file-based settings on macOS and Linux, the file must be a regular file owned by `root` and must not be group- or world-writable.
 - Server-managed settings require the Copilot license to come from the enterprise or one of its organizations. MDM and file-based settings apply to the local client regardless of where the user’s Copilot license comes from.
 
 ### Demo flow (≈7 min): prepared before/after, not a fleet rollout
@@ -160,11 +168,13 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 3. In the client, show the before/after behavior for the selected supported key.
 4. Explain how the source precedence and refresh behavior affect the demo. Do not deploy to or modify a live fleet.
 
-**Sample file:** This is the documented minimal example for making `auto` the default model for new conversations. Before using it, check the key’s current coverage for the specific demo client.
+**Sample file:** This demonstrates a permission guardrail. Check the key’s current coverage and supported values for the specific demo client before using it.
 
 ```json
 {
-  "model": "auto"
+  "permissions": {
+    "disableBypassPermissionsMode": "disable"
+  }
 }
 ```
 
@@ -181,7 +191,7 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 
 **Key point:** Separate seat assignment, included AI credits, and metered spend; use budgets that match the limit you intend to enforce.
 
-**🖼️ Visual:** Budget hierarchy — show the existing [Copilot usage-based billing page](../src/content/topics/github/copilot-usage-billing.mdx) to distinguish seats, pooled credits, and budget layers. Explain that exact pool boundaries depend on the billing entity/plan.
+**🖼️ Visual:** Budget hierarchy — show the existing [Copilot usage-based billing page](https://robpitcher.github.io/glassbox/github/copilot-usage-billing/) to distinguish seats, pooled credits, and budget layers. Explain that exact pool boundaries depend on the billing entity/plan.
 
 ### Demo / click path
 
@@ -194,18 +204,20 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 
 - Copilot Business includes 1,900 AI credits per license per month; Copilot Enterprise includes 3,900 per license per month. Each AI credit is $0.01 USD. Confirm plan and current values in the linked billing docs before the session.
 - For Business and Enterprise, included credits are pooled at the billing entity level and reset monthly; they do not roll over. Usage beyond the pool is separately metered when paid usage is allowed.
+- The **AI credits paid usage** policy is enabled by default for Copilot Business, Enterprise, and Copilot access; disable it explicitly if the intended posture is to block paid usage. Copilot access has no included allowance, so metered usage starts with the first use.
 - Inline code completions and next edit suggestions do not consume AI credits.
 - Budget layers have different jobs:
 
 | Control | What it limits | Enforcement detail |
 |---|---|---|
-| User-level budget | One user’s total AI-credit consumption, including included-pool use | Always a hard stop |
+| User-level budget | One user’s total AI-credit consumption, including included-pool use | Always a hard stop; an individual user budget overrides the universal and cost-center user budgets, and can have an optional expiration |
 | Cost-center user-level budget | Each member’s individual consumption within that cost center | Overrides the universal user budget for those members |
 | Cost-center / enterprise spending limit | Metered charges for a group or the enterprise | Applies after the shared included pool is exhausted; enable **Stop usage when budget limit is reached** to block further metered usage |
-| Organization budget | Metered charges attributable to users whose seats are billed to that organization | May overlap other controls; understand the billed organization and avoid unexpected blocks |
+| Organization budget | Metered charges attributable to users whose seats are billed to that organization | May overlap other controls; users licensed by multiple organizations can be billed to a different organization each cycle, making enforcement unpredictable |
 
 - A cost-center budget does not cap that group’s draw from the included pool. Cost-center included-usage controls are a separate mechanism.
 - Without the stop option, a spending limit is an alert/notification threshold, not a hard cap. User-level budgets always stop usage when the user reaches the limit.
+- An enterprise budget limits metered usage, not Copilot seat license fees; do not present it as a cap on the full bill.
 - Cost centers help map spend to groups; they do not replace enterprise-wide budget ownership or a review process.
 
 ### Administrative cadence (≈3 min)
@@ -219,6 +231,8 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 ### Likely questions
 
 - **What happens when a budget is reached?** A user-level budget always blocks that user’s AI-credit-consuming features. A spending limit blocks metered use only when its stop option is enabled. The included pool, applicable budget, and policy state determine the outcome.
+- **Can we make a temporary exception for one user?** An individual user-level budget overrides broader user budgets and can expire at the end of a billing cycle or on a selected date.
+- **Does an enterprise budget cap the Copilot bill?** It caps metered usage, not license fees.
 - **Do completions consume AI credits?** No. Inline completions and next edit suggestions remain available even if a user’s AI-credit budget is exhausted.
 - **Does a cost-center budget limit the included pool?** No. A cost-center spending budget limits metered charges after the shared pool is exhausted; included-usage controls are separate.
 
@@ -265,6 +279,10 @@ An enterprise can enforce a setting or delegate to organizations. For users with
 **Can administrators use audit logs to inspect local prompts?**
 
 No. Enterprise Copilot audit logs show plan changes such as policies and licenses, plus agent activity on GitHub.com. They do not include local client session prompts. Audit log history is retained for 180 days; streaming can support longer retention.
+
+**Can we temporarily raise one user's limit?**
+
+Yes. An individual user-level budget takes precedence over universal and cost-center user-level budgets. It can be given an expiration date or set to expire at the end of the current billing cycle.
 
 **Will a managed settings file control every Copilot client and every key?**
 
@@ -320,12 +338,14 @@ Recheck these official sources before delivery. The most useful client detail is
 - [Managing policies and features for GitHub Copilot in your enterprise](https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-enterprise/manage-enterprise-policies)
 - [Feature availability when GitHub Copilot policies conflict in organizations](https://docs.github.com/en/copilot/reference/enterprise-administrators/policy-conflicts)
 - [About default availability of Copilot features and models](https://docs.github.com/en/copilot/concepts/enterprise/default-availability)
+- [Content exclusion for GitHub Copilot](https://docs.github.com/en/copilot/concepts/security-governance-and-network-settings/content-exclusion)
 - [Reviewing audit logs for GitHub Copilot](https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-enterprise/review-audit-logs)
 
 ### Enterprise-managed client settings
 
 - [Getting started with enterprise-managed settings](https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-enterprise/use-managed-settings/get-started)
 - [Choosing how to deploy enterprise-managed settings to users](https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-enterprise/use-managed-settings/deploy-managed-settings)
+- [Overriding enterprise-managed settings for enterprise teams](https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-enterprise/use-managed-settings/override-settings-for-teams)
 - [Enterprise managed settings: supported keys and client coverage](https://docs.github.com/en/copilot/reference/enterprise-administrators/enterprise-managed-settings)
 - [Changelog: Enterprise-managed settings GA](https://github.blog/changelog/2026-07-01-enterprise-managed-settings-json-is-generally-available/)
 - [Changelog: MDM and file-based managed settings](https://github.blog/changelog/2026-07-08-deploy-managed-copilot-settings-via-mdm-in-vs-code-and-cli/)
@@ -342,5 +362,5 @@ Recheck these official sources before delivery. The most useful client detail is
 
 ### Visual aids in this repository
 
-- [GitHub enterprise hierarchy](../src/content/topics/github/account-enterprise-hierarchy.mdx) — use in Segment 1 and briefly in Segment 2 for the enterprise/organization decision boundary.
-- [Copilot usage-based billing](../src/content/topics/github/copilot-usage-billing.mdx) — use in Segment 4 to illustrate seats, AI credits, and budget layers. Explain the billing-entity boundary and the difference between included-pool controls and metered-spend limits.
+- [GitHub enterprise hierarchy](https://robpitcher.github.io/glassbox/github/account-enterprise-hierarchy/) — use in Segment 1 and briefly in Segment 2 for the enterprise/organization decision boundary.
+- [Copilot usage-based billing](https://robpitcher.github.io/glassbox/github/copilot-usage-billing/) — use in Segment 4 to illustrate seats, AI credits, and budget layers. Explain the billing-entity boundary and the difference between included-pool controls and metered-spend limits.
