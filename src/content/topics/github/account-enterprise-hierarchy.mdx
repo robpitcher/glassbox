@@ -10,7 +10,7 @@ breadcrumb:
   - "GitHub"
   - "Enterprise Cloud"
   - "Hierarchy"
-updated: 2026-10-15
+updated: 2026-11-05
 ---
 
 import FactCards from '/src/components/FactCards.astro';
@@ -21,7 +21,7 @@ import HierarchyExplorer from '/src/components/hierarchy/HierarchyExplorer.svelt
     { label: 'Enterprise owns', value: 'organizations' },
     { label: 'Organization owns', value: 'repos & teams' },
     { label: 'Teams give members', value: 'access to repos' },
-    { label: 'People are', value: 'members, not parents' },
+    { label: 'People join', value: 'organizations & teams' },
   ]}
 />
 
@@ -41,4 +41,3 @@ import HierarchyExplorer from '/src/components/hierarchy/HierarchyExplorer.svelt
 - **Sign-in.** EMU always signs in through the IdP, using SAML, or OIDC with Entra ID. With personal accounts, SAML SSO is optional. It links an existing account to an IdP identity but doesn't create one.
 - **Team membership.** With EMU, organization and enterprise teams can both be linked to IdP groups, so membership follows the IdP. With personal accounts, only organization teams can sync, and only with Entra ID or Okta.
 - **Reach outside the enterprise.** Managed users can't create public content or contribute outside the enterprise, and any repository they own must be private. Personal accounts keep their own public and private repositories and can join other organizations.
-

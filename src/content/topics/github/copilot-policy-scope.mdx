@@ -11,7 +11,7 @@ breadcrumb:
   - "GitHub"
   - "Copilot"
   - "Policy scope"
-updated: 2026-10-29
+updated: 2026-11-05
 ---
 
 import FactCards from '/src/components/FactCards.astro';
@@ -39,7 +39,7 @@ import { withBase } from '/src/lib/url';
 
 ## When licenses overlap
 
-- **Across organizations, each policy has a rule.** When `kai` gets a license from both `acme-web` and `acme-data`, most policies (such as Copilot CLI, Chat in the IDE, agent mode, and MCP servers) use the least restrictive setting. A few (such as suggestions matching public code and the Copilot Metrics API) use the most restrictive.
+- **Across organizations, each policy has a rule.** When `kai` gets a license from both `acme-web` and `acme-data`, most policies (such as Copilot CLI, Chat in the IDE, agent mode, and MCP servers) use the least restrictive setting. A few (such as suggestions matching public code and the Copilot Metrics API) use the most restrictive. See GitHub's [policy-by-policy conflict rules](https://docs.github.com/en/copilot/reference/enterprise-administrators/policy-conflicts#availability-for-members-with-copilot-from-multiple-organizations) for exactly which rule applies to each policy.
 - **Across enterprises, the most restrictive almost always wins.** AI credit paid usage and GitHub Spark are the exceptions.
 - **Personal plans don't conflict.** Copilot Pro or Pro+ is cancelled when someone gets a Business or Enterprise seat.
 - **Licensing itself** depends on where a person sits. See <a href={withBase('/github/account-enterprise-hierarchy/')}>GitHub enterprise hierarchy</a> and <a href={withBase('/github/copilot-access/')}>Copilot access with GHEC</a>.
