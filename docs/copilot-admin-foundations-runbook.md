@@ -157,7 +157,7 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 | Linux | `/etc/github-copilot/managed-settings.json` |
 
 - Native MDM is supported on Windows and macOS: Windows uses string values under `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\GitHubCopilot`; macOS uses forced managed preferences in the `com.github.copilot` domain. Native MDM is not supported on Linux.
-- When sources overlap, precedence is MDM → server-managed → file-based → user-level settings. `sandbox` and `permissions.deny`, `permissions.ask`, and `permissions.allow` compose in the most restrictive direction across sources.
+- When sources overlap, precedence is MDM → server-managed → file-based → user-level settings. `sandbox` and `permissions.deny`, `permissions.ask`, and `permissions.allow` compose in the most restrictive direction across sources. For `permissions.disableBypassPermissionsMode`, a `"disable"` from any policy layer wins and cannot be relaxed by a team override.
 - Server-managed updates apply automatically within about an hour; restarting or signing in again triggers an immediate refresh. File-based settings are loaded when supported clients restart. MDM policies are checked periodically; VS Code also has **Developer: Sync Account Policy** for testing.
 - For supported clients, `forceRemoteSettingsRefresh` can require a fresh server-managed settings fetch on startup; check the key's current client support before relying on it for a time-sensitive change.
 - For Copilot CLI file-based settings on macOS and Linux, the file must be a regular file owned by `root` and must not be group- or world-writable.
@@ -165,23 +165,25 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 
 ### Demo flow (≈7 min): prepared before/after, not a fleet rollout
 
-1. Open the prepared `copilot/managed-settings.json` and identify the enterprise-wide permission guardrail and default model.
+1. Open the prepared `copilot/managed-settings.json` and identify the enterprise-wide model default and the permission setting left unmanaged for team-specific configuration.
 2. For server-managed delivery, show the selected source repository, team mapping, and team override. For device delivery, show the prepared location or a screenshot; team overrides require server-managed delivery.
 3. For server-managed delivery, compare the guardrail and new-conversation model defaults for a team member and a non-member on supported clients. For device delivery, demonstrate a supported setting instead. Use prepared before/after screenshots if the demo is not safe to run live.
 4. Explain how the source precedence and refresh behavior affect the demo. Do not deploy to or modify a live fleet.
 
-**Sample server-managed files:** Place these in the selected organization’s `.github-private` repository. The permission guardrail applies to all eligible users on supported clients; the model default can be overridden for the named enterprise team. Verify the team slug, client support for Copilot Fusion and Claude Sonnet 5.5, and that enterprise policies allow both before using them.
+**Sample server-managed files:** Place these in the selected organization’s `.github-private` repository. Copilot Fusion is the enterprise-wide model default; the named enterprise team receives a different model default and the bypass-permissions guardrail. Verify the team slug, support for the permission key and both model choices in the demo client, and that enterprise policies allow those models before using them.
 
-**Everyone: `copilot/managed-settings.json`**
+**Enterprise defaults: `copilot/managed-settings.json`**
 
 ```json
 {
   "permissions": {
-    "disableBypassPermissionsMode": "disable"
+    "disableBypassPermissionsMode": { "overridable": "unmanaged" }
   },
   "model": { "overridable": "fusion" }
 }
 ```
+
+`unmanaged` means this enterprise default does not disable bypass mode; it does not force bypass mode on or remove restrictions from other policy layers. The `overridable` wrapper makes the key eligible for configuration in the team file.
 
 **Team mapping: `copilot/team-mappings.json`**
 
@@ -195,13 +197,16 @@ Use one scenario throughout: **“Your company is rolling Copilot out to a new e
 
 ```json
 {
+  "permissions": {
+    "disableBypassPermissionsMode": "disable"
+  },
   "model": "claude-sonnet-5.5"
 }
 ```
 
-For an eligible user outside the mapped team, bypass-permission mode is disabled and new conversations default to Copilot Fusion. For an eligible `sg-gh-ghcp-standalone` member, the same guardrail applies, but new conversations default to Claude Sonnet 5.5. `model` sets a default, not an allowlist: users can select a different available model for a conversation.
+For an eligible user outside the mapped team, this example adds no bypass-permission restriction and new conversations default to Copilot Fusion. For an eligible `sg-gh-ghcp-standalone` member, bypass-permission mode is disabled and new conversations default to Claude Sonnet 5.5. `model` sets a default, not an allowlist: users can select a different available model for a conversation.
 
-This comparison assumes no other team override or higher-priority MDM setting affects the test users. A user in multiple mapped enterprise teams receives the combined team settings using the least restrictive value for each key; platform policies still apply. If the team has no override for an overridable key, the enterprise default applies.
+This comparison assumes no other team override or managed policy affects the test users. Multiple mapped team memberships can affect the resulting settings, but a `"disable"` for `permissions.disableBypassPermissionsMode` from any policy layer remains effective. If the team has no override for an overridable key, the enterprise default applies.
 
 For file-based delivery, use plain values such as `"model": "fusion"` instead of the `overridable` wrapper. Native MDM uses individual policy values and can target device groups; neither device-delivery method uses the enterprise team mapping.
 
