@@ -76,7 +76,7 @@
 
 - **Prompts in the audit log?** No.
 - **Raise one user's limit?** Give that user an individual budget. It can expire.
-- **Does a budget cap the bill?** It caps metered use only.
+- **Does an enterprise budget cap the bill?** It caps metered use, not seat fees.
 - **Do completions stop at a $0 budget?** No.
 - **Can an org enable what the enterprise disabled?** Not if the enterprise enforced it.
 - **What do we do first?** Inventory plans, license sources, owners, and clients, then pilot one group.
