@@ -1023,7 +1023,7 @@
     border: 1.5px solid var(--team);
     border-radius: var(--radius-pill);
     background: var(--surface-solid);
-    color: var(--team);
+    color: var(--text);
     font-size: 0.62rem;
     font-weight: 800;
     line-height: 1;
