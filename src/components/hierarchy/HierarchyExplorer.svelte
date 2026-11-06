@@ -3,26 +3,28 @@
   import SectionHead from '../ui/SectionHead.svelte';
   import SegmentedToggle from '../ui/SegmentedToggle.svelte';
   import {
+    CONTROLS,
     ENTERPRISE,
+    GROUPS,
+    IDP,
     MODES,
     ORGS,
-    REPOS,
-    TEAMS,
     USERS,
     explain,
-    orgsOf,
-    reposFor,
-    reposIn,
-    team,
-    teamsIn,
-    teamsOf,
+    groupLinked,
+    groupMembers,
+    initial,
     userName,
     userRepoName,
+    world,
+    type Group,
     type ModeId,
+    type OrgId,
     type Selection,
     type Team,
     type UserId,
   } from './data';
+  import { routeWires, type WirePath } from './wires';
 
   interface Props {
     initialMode?: ModeId;
@@ -31,10 +33,15 @@
   let { initialMode = 'emu' }: Props = $props();
 
   let modeId = $state<ModeId>(initialMode);
+  let platformInOrgs = $state(true);
+  let groupsOn = $state(false);
   let selection = $state<Selection | null>(null);
 
   const emu = $derived(modeId === 'emu');
-  const info = $derived(explain(modeId, selection));
+  const w = $derived(world(platformInOrgs));
+  const info = $derived(explain(modeId, selection, { platformInOrgs, groups: groupsOn }));
+  const showIdp = $derived(emu || groupsOn);
+  const linkedGroups = $derived(groupsOn ? GROUPS.filter((g) => groupLinked(modeId, g)) : []);
 
   const key = (s: Selection) => ('id' in s ? `${s.kind}:${s.id}` : s.kind);
   const selectedKey = $derived(selection ? key(selection) : null);
@@ -49,47 +56,72 @@
       keys.add(`team:${t.id}`);
       if (t.org) keys.add(`org:${t.org}`);
       else keys.add('enterprise');
+      t.addedTo?.forEach((o) => keys.add(`org:${o}`));
+    };
+    const addLinkedGroup = (teamId: string) => {
+      const g = linkedGroups.find((x) => x.team === teamId);
+      if (g) keys.add(`group:${g.id}`);
+      return g;
     };
 
     switch (s.kind) {
       case 'idp':
-        USERS.forEach((u) => keys.add(`user:${u}`));
+        if (emu) USERS.forEach((u) => keys.add(`user:${u}`));
+        if (groupsOn) GROUPS.forEach((g) => keys.add(`group:${g.id}`));
+        linkedGroups.forEach((g) => keys.add(`team:${g.team}`));
         break;
       case 'enterprise':
         ORGS.forEach((o) => keys.add(`org:${o}`));
-        TEAMS.filter((t) => !t.org).forEach((t) => keys.add(`team:${t.id}`));
+        w.teams.filter((t) => !t.org).forEach((t) => keys.add(`team:${t.id}`));
         if (emu) USERS.forEach((u) => keys.add(`user:${u}`));
         break;
       case 'org':
         keys.add('enterprise');
-        teamsIn(s.id).forEach((t) => keys.add(`team:${t.id}`));
-        reposIn(s.id).forEach((r) => keys.add(`repo:${r.id}`));
+        w.teamsIn(s.id).forEach((t) => keys.add(`team:${t.id}`));
+        w.reposIn(s.id).forEach((r) => keys.add(`repo:${r.id}`));
         break;
       case 'team': {
-        const t = team(s.id);
+        const t = w.team(s.id);
         addTeam(t);
-        t.addedTo?.forEach((o) => keys.add(`org:${o}`));
         t.members.forEach((u) => keys.add(`user:${u}`));
-        reposFor(t.id).forEach((r) => keys.add(`repo:${r.id}`));
+        w.reposFor(t.id).forEach((r) => keys.add(`repo:${r.id}`));
+        if (addLinkedGroup(t.id)) keys.add('idp');
+        break;
+      }
+      case 'group': {
+        const g = GROUPS.find((x) => x.id === s.id)!;
+        keys.add('idp');
+        groupMembers(g).forEach((u) => keys.add(`user:${u}`));
+        if (groupLinked(modeId, g)) {
+          const t = w.team(g.team);
+          addTeam(t);
+          w.reposFor(t.id).forEach((r) => keys.add(`repo:${r.id}`));
+        }
         break;
       }
       case 'repo': {
-        const r = REPOS.find((x) => x.id === s.id)!;
+        const r = w.repos.find((x) => x.id === s.id)!;
         keys.add(`org:${r.org}`);
-        r.teams.map(team).forEach((t) => {
+        r.teams.forEach((id) => {
+          const t = w.team(id);
           keys.add(`team:${t.id}`);
           t.members.forEach((u) => keys.add(`user:${u}`));
+          addLinkedGroup(t.id);
         });
         break;
       }
       case 'user':
-        teamsOf(s.id).forEach((t) => {
+        w.teamsOf(s.id).forEach((t) => {
           keys.add(`team:${t.id}`);
-          reposFor(t.id).forEach((r) => keys.add(`repo:${r.id}`));
+          w.reposFor(t.id).forEach((r) => keys.add(`repo:${r.id}`));
         });
-        orgsOf(s.id).forEach((o) => keys.add(`org:${o}`));
+        w.orgsOf(s.id).forEach((o) => keys.add(`org:${o}`));
         if (s.id === 'mona') keys.add('user-repo');
         if (emu) keys.add('idp');
+        if (groupsOn) {
+          keys.add('idp');
+          GROUPS.filter((g) => groupMembers(g).includes(s.id)).forEach((g) => keys.add(`group:${g.id}`));
+        }
         break;
       case 'user-repo':
         keys.add('user:mona');
@@ -98,11 +130,25 @@
     return keys;
   });
 
+  // With groups shown and nothing selected, everything but the IdP, its groups, and their teams steps back.
+  const focus = $derived(groupsOn && !selection);
+  const focusKeys = $derived(
+    new Set(['idp', ...GROUPS.map((g) => `group:${g.id}`), ...linkedGroups.map((g) => `team:${g.team}`)]),
+  );
+
   const tone = (s: Selection) => {
     const k = key(s);
-    if (!selection) return '';
+    if (!selection) return focus && !focusKeys.has(k) ? 'is-dim' : '';
     if (k === selectedKey) return 'is-selected';
     return lit.has(k) ? 'is-lit' : 'is-dim';
+  };
+
+  // The owner box lights only when the personal repository is part of the selection.
+  const ownTone = $derived(focus ? 'is-dim' : !selection ? '' : lit.has('user-repo') ? 'is-lit' : 'is-dim');
+
+  const wireTone = (g: Group) => {
+    if (!selection) return '';
+    return lit.has(`group:${g.id}`) && lit.has(`team:${g.team}`) ? 'is-lit' : 'is-dim';
   };
 
   function select(s: Selection) {
@@ -111,7 +157,12 @@
 
   function setMode(next: ModeId) {
     modeId = next;
-    if (selection?.kind === 'idp' && next === 'personal') selection = null;
+    if (selection?.kind === 'idp' && next === 'personal' && !groupsOn) selection = null;
+  }
+
+  function setGroups(on: boolean) {
+    groupsOn = on;
+    if (!on && (selection?.kind === 'group' || (selection?.kind === 'idp' && !emu))) selection = null;
   }
 
   function onkeydown(event: KeyboardEvent) {
@@ -121,13 +172,60 @@
   const TEAM_COLORS = ['var(--cc-2)', 'var(--cc-4)', 'var(--cc-5)', 'var(--warn)', 'var(--cc-3)'];
   const teamColor = (t: Team) => TEAM_COLORS[t.color];
   const modeOptions = (['emu', 'personal'] as const).map((id) => ({ id, label: MODES[id].label }));
+  const memberNames = (users: UserId[]) => users.map((u) => userName(modeId, u)).join(' and ');
+
+  let stageEl = $state<HTMLDivElement>();
+  let wires = $state<(WirePath & { group: Group; color: string })[]>([]);
+
+  // Each linked group wires to its team's own pill: the org pill, or the enterprise pill for an enterprise team.
+  function route(stage: HTMLElement) {
+    const legs = linkedGroups.flatMap((g) => {
+      const t = w.team(g.team);
+      const from = stage.querySelector(`[data-group="${g.id}"]`);
+      const to = stage.querySelector(t.org ? `[data-org="${t.org}"] [data-team="${t.id}"]` : `[data-team="${t.id}"][data-in="enterprise"]`);
+      return from && to ? [{ id: g.id, from, to }] : [];
+    });
+    return routeWires(stage, legs).map((p) => {
+      const g = linkedGroups.find((x) => x.id === p.id)!;
+      return { ...p, group: g, color: teamColor(w.team(g.team)) };
+    });
+  }
+
+  $effect(() => {
+    const stage = stageEl;
+    // Anything that moves boxes re-routes the wires; resizes are caught by the observer.
+    void [groupsOn, platformInOrgs, modeId];
+    if (!stage || !groupsOn) {
+      wires = [];
+      return;
+    }
+    let live = true;
+    let frame = 0;
+    const update = () => {
+      if (live) wires = route(stage);
+    };
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(update);
+    };
+    update();
+    const observer = new ResizeObserver(schedule);
+    observer.observe(stage);
+    document.fonts?.ready.then(schedule);
+    return () => {
+      live = false;
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  });
 </script>
 
 <!--
   THESIS: Ownership nests (enterprise → org → team/repo); people attach by membership, and teams carry access to repos.
   OWN-WORLD: Midnight Glass blue system: nested translucent boundaries, one color per team, repos wear their teams' colors.
-  STORY: Flip the account model to move accounts outside or inside the enterprise; select a team, repo, or person to trace who reaches what.
-  FIRST VIEWPORT: Header, a single control bar, then accounts → enterprise → two orgs with team pills and repo tiles.
+  STORY: Flip the account model to move accounts outside or inside the enterprise; add IdP groups or pull the enterprise team
+    out of the orgs; select a team, repo, group, or person to trace who reaches what.
+  FIRST VIEWPORT: Header, the control bars, then accounts → enterprise → two orgs with team pills and repo tiles.
   FORM: Responsive semantic HTML; every element is a keyboard-focusable toggle, with a live one-line explanation underneath.
 -->
 {#snippet avatar()}
@@ -137,21 +235,73 @@
   </svg>
 {/snippet}
 
-{#snippet teamPill(t: Team, org: string | null = null)}
+{#snippet initials(users: UserId[])}
+  <span class="team-avatars" aria-hidden="true">
+    {#each users as member (member)}<span class="mini-avatar">{initial(member)}</span>{/each}
+  </span>
+{/snippet}
+
+{#snippet teamPill(t: Team, org: OrgId | null = null)}
   {@const ent = !t.org}
   <button
     type="button"
     class="team {tone({ kind: 'team', id: t.id })}"
     class:enterprise-team={ent}
     style:--team={teamColor(t)}
+    data-team={t.id}
+    data-in={org ?? 'enterprise'}
     aria-pressed={selectedKey === `team:${t.id}`}
-    aria-label={`${t.name}, ${ent ? `enterprise team${org ? ` added to ${org}` : ''}` : `team in ${t.org}`}, ${t.members.length} ${t.members.length === 1 ? 'member' : 'members'}`}
+    aria-label={`${t.name}, ${ent ? `enterprise team${org ? ` added to ${org}` : ''}` : `team in ${t.org}`}, members ${memberNames(t.members)}`}
     onclick={() => select({ kind: 'team', id: t.id })}
   >
-    <span class="team-avatars" aria-hidden="true">
-      {#each t.members as member (member)}<span class="mini-avatar">{@render avatar()}</span>{/each}
-    </span>
+    {@render initials(t.members)}
     <span class="team-name">{t.name}</span>
+  </button>
+{/snippet}
+
+{#snippet groupChip(g: Group)}
+  {@const linked = groupLinked(modeId, g)}
+  {@const members = groupMembers(g)}
+  <button
+    type="button"
+    class="group {tone({ kind: 'group', id: g.id })}"
+    class:unlinked={!linked}
+    style:--team={teamColor(w.team(g.team))}
+    data-group={g.id}
+    aria-pressed={selectedKey === `group:${g.id}`}
+    aria-label={`${g.name}, IdP group ${linked ? `linked to ${g.team}` : 'not linked to a team'}, members ${memberNames(members)}`}
+    onclick={() => select({ kind: 'group', id: g.id })}
+  >
+    {@render initials(members)}
+    <span class="group-name">{g.name}</span>
+    {#if !linked}<span class="group-note">{CONTROLS.unlinked}</span>{/if}
+  </button>
+{/snippet}
+
+{#snippet idpBox()}
+  <div class="idp-box {tone({ kind: 'idp' })}">
+    <button type="button" class="idp" aria-pressed={selectedKey === 'idp'} onclick={() => select({ kind: 'idp' })}>
+      <span class="tag tag-idp">Identity provider</span>
+      <strong>{IDP[modeId].name}</strong>
+      <span class="idp-sub">{IDP[modeId].sub}</span>
+    </button>
+    {#if groupsOn}
+      <div class="groups" role="group" aria-label={CONTROLS.groupsLabel}>
+        {#each GROUPS as g (g.id)}{@render groupChip(g)}{/each}
+      </div>
+    {/if}
+  </div>
+{/snippet}
+
+{#snippet person(user: UserId)}
+  <button
+    type="button"
+    class="person {tone({ kind: 'user', id: user })}"
+    aria-pressed={selectedKey === `user:${user}`}
+    onclick={() => select({ kind: 'user', id: user })}
+  >
+    <span class="avatar">{@render avatar()}</span>
+    <span class="person-name">{userName(modeId, user)}</span>
   </button>
 {/snippet}
 
@@ -160,31 +310,29 @@
     <p class="visual-label column-label">{emu ? 'Managed users' : 'Personal accounts'}</p>
     <ul>
       {#each USERS as user (user)}
-        <li>
-          <button
-            type="button"
-            class="person {tone({ kind: 'user', id: user })}"
-            aria-pressed={selectedKey === `user:${user}`}
-            onclick={() => select({ kind: 'user', id: user })}
-          >
-            <span class="avatar">{@render avatar()}</span>
-            <span class="person-name">{userName(modeId, user)}</span>
-          </button>
+        <li class:owner={user === 'mona'}>
+          {#if user === 'mona'}
+            <div class="own {ownTone}" role="group" aria-label={CONTROLS.ownerBox(userName(modeId, user))}>
+              {@render person(user)}
+              <button
+                type="button"
+                class="repo user-repo {tone({ kind: 'user-repo' })}"
+                aria-pressed={selectedKey === 'user-repo'}
+                onclick={() => select({ kind: 'user-repo' })}
+              >
+                <span class="repo-top">
+                  <svg class="repo-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="3" width="13" height="10" rx="2" /></svg>
+                  <span class="visibility">{emu ? 'private' : 'public'}</span>
+                </span>
+                <span class="repo-name">{userRepoName(modeId).split('/')[0]}/<wbr />{userRepoName(modeId).split('/')[1]}</span>
+              </button>
+            </div>
+          {:else}
+            {@render person(user)}
+          {/if}
         </li>
       {/each}
     </ul>
-    <button
-      type="button"
-      class="repo user-repo {tone({ kind: 'user-repo' })}"
-      aria-pressed={selectedKey === 'user-repo'}
-      onclick={() => select({ kind: 'user-repo' })}
-    >
-      <span class="repo-top">
-        <svg class="repo-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="3" width="13" height="10" rx="2" /></svg>
-        <span class="visibility">{emu ? 'private' : 'public'}</span>
-      </span>
-      <span class="repo-name">{userRepoName(modeId).split('/')[0]}/<wbr />{userRepoName(modeId).split('/')[1]}</span>
-    </button>
   </div>
 {/snippet}
 
@@ -194,27 +342,41 @@
   </SectionHead>
 
   <div class="visual-controls">
-    <span class="visual-label" id="hierarchy-mode-label">Show</span>
+    <span class="visual-label" id="hierarchy-mode-label">{CONTROLS.mode}</span>
     <SegmentedToggle options={modeOptions} value={modeId} onchange={setMode} labelledby="hierarchy-mode-label" />
-    <span class="visual-hint">Select a team, repo, or person</span>
   </div>
 
-  <div class="stage" class:emu class:has-selection={selection !== null}>
+  <div class="visual-controls">
+    <span class="visual-label">{CONTROLS.show}</span>
+    <button
+      type="button"
+      class="switch"
+      class:active={platformInOrgs}
+      role="switch"
+      aria-checked={platformInOrgs}
+      onclick={() => (platformInOrgs = !platformInOrgs)}
+    >
+      <span class="switch-track" aria-hidden="true"><span></span></span>
+      <span>{CONTROLS.platformInOrgs}</span>
+    </button>
+    <button
+      type="button"
+      class="switch"
+      class:active={groupsOn}
+      role="switch"
+      aria-checked={groupsOn}
+      onclick={() => setGroups(!groupsOn)}
+    >
+      <span class="switch-track" aria-hidden="true"><span></span></span>
+      <span>{CONTROLS.groups}</span>
+    </button>
+    <span class="visual-hint">{CONTROLS.hint}</span>
+  </div>
+
+  <div class="stage" class:emu class:focus-groups={focus} class:has-selection={selection !== null} bind:this={stageEl}>
     <div class="outside">
-      {#if emu}
-        <button
-          type="button"
-          class="idp {tone({ kind: 'idp' })}"
-          aria-pressed={selectedKey === 'idp'}
-          onclick={() => select({ kind: 'idp' })}
-        >
-          <span class="tag tag-idp">Identity provider</span>
-          <strong>Entra ID · Okta · PingFederate</strong>
-          <span class="idp-sub">source of truth for users and groups</span>
-        </button>
-      {:else}
-        {@render accounts()}
-      {/if}
+      {#if showIdp}{@render idpBox()}{/if}
+      {#if !emu}{@render accounts()}{/if}
     </div>
 
     <div class="connector" aria-hidden="true">
@@ -238,7 +400,7 @@
         </button>
         <div class="enterprise-teams">
           <span class="visual-label">Enterprise team</span>
-          {#each TEAMS.filter((t) => !t.org) as t (t.id)}{@render teamPill(t)}{/each}
+          {#each w.teams.filter((t) => !t.org) as t (t.id)}{@render teamPill(t)}{/each}
         </div>
       </div>
 
@@ -247,7 +409,7 @@
 
         <div class="orgs">
           {#each ORGS as org (org)}
-            <div class="org {tone({ kind: 'org', id: org })}">
+            <div class="org {tone({ kind: 'org', id: org })}" data-org={org}>
               <button
                 type="button"
                 class="org-name"
@@ -259,11 +421,11 @@
               </button>
 
               <div class="teams" role="group" aria-label={`Teams in ${org}`}>
-                {#each teamsIn(org) as t (t.id)}{@render teamPill(t, org)}{/each}
+                {#each w.teamsIn(org) as t (t.id)}{@render teamPill(t, org)}{/each}
               </div>
 
               <div class="repos" role="group" aria-label={`Repositories owned by ${org}`}>
-                {#each reposIn(org) as repo (repo.id)}
+                {#each w.reposIn(org) as repo (repo.id)}
                   <button
                     type="button"
                     class="repo {tone({ kind: 'repo', id: repo.id })}"
@@ -274,7 +436,7 @@
                     <span class="repo-top">
                       <svg class="repo-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="3" width="13" height="10" rx="2" /></svg>
                       <span class="dots" aria-hidden="true">
-                        {#each repo.teams as id (id)}<span style:--team={teamColor(team(id))}></span>{/each}
+                        {#each repo.teams as id (id)}<span style:--team={teamColor(w.team(id))}></span>{/each}
                       </span>
                     </span>
                     <span class="repo-name">{repo.name}</span>
@@ -286,6 +448,17 @@
         </div>
       </div>
     </div>
+
+    {#if wires.length}
+      <svg class="wires" aria-hidden="true">
+        {#each wires as wire (wire.id)}
+          <g class="wire {wireTone(wire.group)}" style:--team={wire.color}>
+            <path class="wire-line" d={wire.d} />
+            <path d={wire.head} />
+          </g>
+        {/each}
+      </svg>
+    {/if}
   </div>
 
   <InfoBar lead={info.lead} text={info.text} note={info.note} />
@@ -303,8 +476,79 @@
     outline-offset: 2px;
   }
 
+  .visual-controls + .visual-controls {
+    margin-top: 0.6rem;
+  }
+
+  /* Switches */
+  .switch {
+    display: inline-flex;
+    min-height: 2rem;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.91rem;
+    font-weight: 700;
+    transition: color var(--dur) var(--ease);
+  }
+
+  .switch.active {
+    color: var(--text);
+  }
+
+  .switch:focus-visible {
+    outline-offset: 3px;
+  }
+
+  .switch-track {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    width: 2.95rem;
+    height: 1.55rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--glass-track);
+    box-shadow: var(--glass-track-shadow);
+    transition:
+      background var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease);
+  }
+
+  .switch-track span {
+    position: absolute;
+    left: 0.2rem;
+    width: 1.08rem;
+    height: 1.08rem;
+    border: 1px solid var(--glass-knob-border);
+    border-radius: var(--radius-pill);
+    background: var(--glass-knob);
+    box-shadow:
+      inset 0 -1px 1px rgba(15, 23, 42, 0.12),
+      0 2px 5px rgba(0, 0, 0, 0.3);
+    transition:
+      transform var(--dur) var(--ease),
+      background var(--dur) var(--ease);
+  }
+
+  .switch.active .switch-track {
+    border-color: color-mix(in srgb, var(--accent) 75%, var(--border));
+    background: var(--glass-pill);
+    box-shadow: var(--glass-pill-shadow);
+  }
+
+  .switch.active .switch-track span {
+    transform: translateX(1.38rem);
+  }
+
   /* Stage */
   .stage {
+    position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     align-items: center;
@@ -315,6 +559,7 @@
   .outside {
     display: grid;
     justify-items: center;
+    gap: 1.25rem;
   }
 
   .is-lit,
@@ -335,17 +580,19 @@
     border-color: var(--border);
   }
 
-  .team.is-dim {
+  .team.is-dim,
+  .group.is-dim {
     border-color: var(--border);
     background: transparent;
     color: var(--muted);
   }
 
-  .team.is-dim .mini-avatar {
+  .team.is-dim .mini-avatar,
+  .group.is-dim .mini-avatar {
     border-color: var(--border-strong);
+    color: var(--muted);
   }
 
-  .team.is-dim .avatar-glyph,
   .person.is-dim .avatar-glyph {
     fill: var(--muted);
   }
@@ -369,10 +616,33 @@
     background: var(--surface);
   }
 
-  .idp.is-dim {
+  .idp-box.is-dim {
     border-color: var(--border);
     background: transparent;
+  }
+
+  .idp-box.is-dim .idp {
     color: var(--muted);
+  }
+
+  /* With IdP groups shown and nothing selected, the frames step back too, so the groups and wires lead. */
+  .stage.focus-groups .enterprise,
+  .stage.focus-groups .accounts.inside {
+    border-color: var(--border);
+    background: transparent;
+  }
+
+  .stage.focus-groups :is(.enterprise-name, .org-name) {
+    color: var(--muted);
+  }
+
+  .stage.focus-groups :is(.tag-enterprise, .tag-org) {
+    background: color-mix(in srgb, var(--muted) 14%, transparent);
+    color: var(--muted);
+  }
+
+  .stage.focus-groups .connector svg {
+    stroke: var(--border-strong);
   }
 
   .connector {
@@ -419,16 +689,9 @@
   /* Accounts */
   .accounts {
     display: grid;
-    grid-template-columns: auto auto;
-    grid-template-areas:
-      'label label'
-      'repo people';
-    justify-content: center;
     justify-items: center;
-    align-items: center;
-    gap: 0.6rem;
-    column-gap: 1.25rem;
     align-content: start;
+    gap: 0.6rem;
   }
 
   .accounts.inside {
@@ -440,17 +703,36 @@
   }
 
   .accounts .column-label {
-    grid-area: label;
     text-align: center;
   }
 
   .accounts ul {
-    display: grid;
-    grid-area: people;
-    grid-auto-flow: column;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
     gap: 0.5rem;
     padding: 0;
     list-style: none;
+  }
+
+  /* mona's account and the repository it owns, grouped so ownership reads at a glance. */
+  .own {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem;
+    border: 1px dashed var(--border-strong);
+    border-radius: calc(var(--radius-sm) + 2px);
+  }
+
+  .own.is-lit {
+    border-color: color-mix(in srgb, var(--accent-2) 70%, transparent);
+  }
+
+  .own.is-dim {
+    border-color: var(--border);
   }
 
   .person {
@@ -497,15 +779,27 @@
   }
 
   /* IdP */
-  .idp {
+  .idp-box {
     display: grid;
     width: min(100%, 22rem);
-    justify-items: center;
-    gap: 0.4rem;
-    padding: 0.85rem;
     border: 1px dashed color-mix(in srgb, var(--cc-1) 70%, transparent);
     border-radius: var(--radius);
     background: color-mix(in srgb, var(--cc-1) 8%, transparent);
+  }
+
+  .idp-box.is-selected {
+    border-style: solid;
+    border-color: var(--cc-1);
+  }
+
+  .idp {
+    display: grid;
+    justify-items: center;
+    gap: 0.4rem;
+    padding: 0.85rem;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
     text-align: center;
   }
 
@@ -524,9 +818,56 @@
     line-height: 1.35;
   }
 
-  .idp.is-selected {
-    border-style: solid;
-    border-color: var(--cc-1);
+  .groups {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.45rem 0.6rem;
+    margin: 0 0.85rem;
+    padding: 0.75rem 0 0.85rem;
+    border-top: 1px dashed color-mix(in srgb, var(--cc-1) 45%, transparent);
+  }
+
+  .group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.22rem 0.6rem 0.22rem 0.25rem;
+    border: 1.5px solid color-mix(in srgb, var(--team) 55%, transparent);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--team) 8%, var(--surface-solid));
+  }
+
+  .group:hover {
+    border-color: var(--team);
+  }
+
+  .group.is-selected {
+    border-color: var(--team);
+    background: color-mix(in srgb, var(--team) 24%, var(--surface-solid));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--team) 22%, transparent);
+  }
+
+  .group.unlinked {
+    border-style: dashed;
+    border-color: var(--border-strong);
+    background: transparent;
+  }
+
+  .group.unlinked .mini-avatar {
+    border-color: var(--border-strong);
+    color: var(--muted);
+  }
+
+  .group-name {
+    font-size: 0.8rem;
+    font-weight: 750;
+  }
+
+  .group-note {
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 700;
   }
 
   /* Tags */
@@ -682,14 +1023,14 @@
     border: 1.5px solid var(--team);
     border-radius: var(--radius-pill);
     background: var(--surface-solid);
+    color: var(--team);
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1;
   }
 
   .mini-avatar + .mini-avatar {
-    margin-left: -0.45rem;
-  }
-
-  .mini-avatar .avatar-glyph {
-    fill: var(--team);
+    margin-left: -0.3rem;
   }
 
   .team-name {
@@ -764,10 +1105,8 @@
   }
 
   .user-repo {
-    grid-area: repo;
     width: 8.5rem;
     gap: 0.55rem;
-    border-style: dashed;
     background: transparent;
   }
 
@@ -782,6 +1121,51 @@
     font-weight: 700;
   }
 
+  /* Group wires */
+  .wires {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .wire {
+    animation: wire-in 320ms var(--ease) backwards;
+    transition: opacity var(--dur) var(--ease);
+  }
+
+  .wire path {
+    fill: none;
+    stroke: var(--team);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .wire-line {
+    stroke-dasharray: 4 3.5;
+  }
+
+  .wire.is-dim {
+    opacity: 0.18;
+  }
+
+  @keyframes wire-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wire {
+      animation: none;
+      transition: none;
+    }
+  }
+
   @container (max-width: 600px) {
     .orgs {
       grid-template-columns: minmax(0, 1fr);
@@ -793,15 +1177,15 @@
   }
 
   @container (max-width: 480px) {
-    .accounts,
-    .accounts.inside {
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-areas:
-        'label'
-        'people'
-        'repo';
-      justify-items: center;
-      row-gap: 0.6rem;
+    /* mona's box takes its own row so kai and ray fit together beneath it. */
+    .accounts li.owner {
+      display: flex;
+      flex-basis: 100%;
+      justify-content: center;
+    }
+
+    .user-repo {
+      width: 7rem;
     }
   }
 </style>
