@@ -10,7 +10,7 @@ breadcrumb:
   - "GitHub"
   - "Enterprise Cloud"
   - "Hierarchy"
-updated: 2026-11-05
+updated: 2026-11-06
 ---
 
 import FactCards from '/src/components/FactCards.astro';
@@ -33,7 +33,7 @@ import HierarchyExplorer from '/src/components/hierarchy/HierarchyExplorer.svelt
 - **Organization `acme-data`.** Owned by the enterprise. It owns its repositories and teams, and people join it as members.
 - **Repository `acme-data/lake`.** Owned by the organization, which is the part before the slash. A repository always belongs to an organization or a user account, never to a team or directly to the enterprise.
 - **Team `analytics`.** Lives in `acme-data`, and only that organization's members can join it. The team gives its members access to `lake` and `etl`. Child teams inherit their parent's repository access.
-- **Enterprise team `platform`.** Owned by the enterprise and can span organizations. After it's added to an organization, that organization's admins can give it access to repositories, like `checkout` in `acme-web` and `etl` in `acme-data`. Use an organization team when the need stays within one organization; only organization teams support nesting, secret teams, and CODEOWNERS.
+- **Enterprise team `platform`.** Owned by the enterprise and can span organizations. Adding it to an organization makes its members members of that organization, without an invitation. That organization's admins can then give it access to repositories, like `checkout` in `acme-web` and `etl` in `acme-data`. Until it's added to an organization, it grants no organization membership or repository access, but it can still get Copilot licenses and enterprise roles. Use an organization team when the need stays within one organization; only organization teams support nesting, secret teams, and CODEOWNERS.
 
 ## Managed users (EMU) vs personal accounts
 
