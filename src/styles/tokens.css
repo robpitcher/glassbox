@@ -11,6 +11,8 @@
   --border-strong: rgba(255, 255, 255, 0.16);
   --text: #e9edf6;
   --muted: #8d97ad;
+  --code-property: #e6ca75;
+  --code-string: #f3a79a;
   --faint: #3a4358;
   --accent: #3b82f6;
   --accent-2: #22d3ee;
@@ -52,6 +54,8 @@
   --border-strong: rgba(15, 23, 42, 0.16);
   --text: #0f172a;
   --muted: #5b6478;
+  --code-property: #745000;
+  --code-string: #a13b30;
   --faint: #d5dbe7;
   --accent: #2563eb;
   --accent-2: #0891b2;
