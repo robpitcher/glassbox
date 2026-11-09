@@ -4,6 +4,9 @@ dist/
 .DS_Store
 *.log
 .env
-.impeccable/
+.impeccable/*
+!.impeccable/live/
+.impeccable/live/*
+!.impeccable/live/config.json
 shots/
 mockups/
