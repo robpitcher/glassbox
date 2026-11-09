@@ -64,8 +64,6 @@
     </ol>
 
     <div class="example">
-      <span class="visual-label">{EXAMPLE.label}</span>
-      <code class="json">{EXAMPLE.json}</code>
       <span class="visual-label">{EXAMPLE.reaches}</span>
       <span class="people">
         {#each delivery.people as p (p.name)}
@@ -233,10 +231,6 @@
     padding: 0.7rem 0.9rem;
     border: 1px dashed var(--border-strong);
     border-radius: var(--radius-sm);
-  }
-
-  .json {
-    color: var(--text);
   }
 
   .people {

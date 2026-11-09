@@ -111,7 +111,18 @@ export interface Delivery {
   text: string;
 }
 
-export const EXAMPLE = { label: 'Example', json: '{ "model": "auto" }', reaches: 'Reaches' } as const;
+export const EXAMPLE = {
+  label: 'Example file',
+  filename: 'managed-settings.json',
+  json: `{
+  "model": "auto",
+  "permissions": {
+    "disableBypassPermissionsMode": "disable"
+  }
+}`,
+  note: 'This sets Auto as the default model and disables bypass permissions mode where each key is supported.',
+  reaches: 'Reaches',
+} as const;
 
 const mona = (covered: boolean): Person => ({ name: 'mona', detail: 'Acme license', covered });
 const contractor = (covered: boolean): Person => ({ name: 'contractor', detail: 'own license, Acme device', covered });

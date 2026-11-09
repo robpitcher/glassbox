@@ -11,10 +11,11 @@ breadcrumb:
   - "GitHub"
   - "Copilot"
   - "Managed settings"
-updated: 2026-11-05
+updated: 2026-11-09
 ---
 
 import FactCards from '/src/components/FactCards.astro';
+import SettingsExample from '/src/components/managed-settings/SettingsExample.astro';
 import ControlPlanes from '/src/components/managed-settings/ControlPlanes.svelte';
 import DeliveryMethods from '/src/components/managed-settings/DeliveryMethods.svelte';
 import WhatWins from '/src/components/managed-settings/WhatWins.svelte';
@@ -28,6 +29,8 @@ import { withBase } from '/src/lib/url';
     { label: 'Beats user settings', value: 'For supported keys' },
   ]}
 />
+
+<SettingsExample />
 
 <ControlPlanes client:visible />
 

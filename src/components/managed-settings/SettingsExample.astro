@@ -1,0 +1,71 @@
+---
+import { Code } from 'astro:components';
+import { EXAMPLE } from './data';
+
+const jsonTheme = {
+  name: 'glassbox-json',
+  type: 'dark' as const,
+  colors: {
+    'editor.foreground': 'var(--text)',
+    'editor.background': 'var(--surface-solid)',
+  },
+  tokenColors: [
+    { scope: 'punctuation', settings: { foreground: 'var(--muted)' } },
+    { scope: 'string', settings: { foreground: 'var(--code-string)' } },
+    { scope: 'support.type.property-name', settings: { foreground: 'var(--code-property)' } },
+  ],
+};
+---
+
+<figure class="settings-example">
+  <figcaption>
+    <span class="visual-label">{EXAMPLE.label}</span>
+    <code>{EXAMPLE.filename}</code>
+  </figcaption>
+  <Code code={EXAMPLE.json} lang="json" theme={jsonTheme} wrap />
+  <p>{EXAMPLE.note}</p>
+</figure>
+
+<style>
+  .settings-example {
+    margin-top: 32px;
+  }
+
+  figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.75rem;
+    margin-bottom: 0.65rem;
+  }
+
+  figcaption code {
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+  }
+
+  .settings-example :global(pre) {
+    max-width: 100%;
+    padding: 1rem 1.2rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    font: 0.9rem/1.6 var(--font-mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .settings-example :global(pre .line) {
+    display: inline-block;
+    max-width: 100%;
+    padding-left: 4ch;
+    text-indent: -4ch;
+    vertical-align: top;
+  }
+
+  p {
+    margin-top: 0.65rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>
