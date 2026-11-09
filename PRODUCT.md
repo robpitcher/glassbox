@@ -8,7 +8,7 @@ web
 
 ## Users
 
-GitHub users, GitHub administrators, and potentially technical decision makers evaluating developer tools. They are usually novice to intermediate in GitHub and GitHub Copilot and want to understand how the products work.
+GitHub users and GitHub administrators. They are usually novice to intermediate in GitHub and GitHub Copilot and want to understand how the products work.
 
 ## Product Purpose
 
