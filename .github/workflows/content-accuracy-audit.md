@@ -35,6 +35,7 @@ tools:
     - "curl:*"
     - "git:*"
     - "node:*"
+    - "python3:*"
     - "pnpm:*"
   github:
     toolsets: [repos, pull_requests]
