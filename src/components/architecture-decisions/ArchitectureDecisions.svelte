@@ -210,10 +210,13 @@
       const value = choice[d.id];
       const sug = suggestedFor(d.id);
       const changed = sug !== undefined && overrides[d.id] !== undefined && overrides[d.id] !== sug;
-      const open = value === UNDECIDED || (d.id === 'name' && (!value || !NAME_RE.test(value)));
+      // Guard against a combination that already clashes, such as one restored from saved state.
+      const conflict = d.id === 'name' ? undefined : choiceBlock(d.id, value);
+      const open = !!conflict || value === UNDECIDED || (d.id === 'name' && (!value || !NAME_RE.test(value)));
       return {
         decision: d,
         value,
+        conflict,
         rationale: rationaleFor(d.id, value),
         override: changed ? RATIONALE.override(optionLabel(d.id, sug!)) : undefined,
         open,
@@ -283,7 +286,8 @@
     const head = REVIEW.markdownHeader;
     const lines = [REVIEW.markdownTitle, '', `| ${head.join(' | ')} |`, `| ${head.map(() => '---').join(' | ')} |`];
     for (const r of rows) {
-      const why = [r.rationale, r.override].filter(Boolean).join(' ');
+      const clash = r.conflict && `${CONFLICT_TEXT.blocked(r.conflict.by)} ${r.conflict.reason}`;
+      const why = [clash, r.rationale, r.override].filter(Boolean).join(' ');
       lines.push(
         `| ${[r.decision.label, optionLabel(r.decision.id, r.value), r.decision.impact, why, notes[r.decision.id] ?? ''].map(cell).join(' | ')} |`,
       );
@@ -452,13 +456,23 @@
                     {#if subdomain && name && nameValid}<small>{NAME.subdomainPreview(name)}</small>{/if}
                   {/if}
                 {:else}
-                  <select id="ad-choice-{d.id}" aria-label="{d.label} choice" value={r.value} onchange={(e) => setOverride(d.id, e.currentTarget.value)}>
+                  <select
+                    id="ad-choice-{d.id}"
+                    aria-label="{d.label} choice"
+                    aria-invalid={!!r.conflict}
+                    aria-describedby={r.conflict ? `ad-clash-${d.id}` : undefined}
+                    value={r.value}
+                    onchange={(e) => setOverride(d.id, e.currentTarget.value)}
+                  >
                     {#each d.options as o (o.id)}
-                      {@const block = o.id === r.value ? undefined : choiceBlock(d.id, o.id)}
-                      <option value={o.id} disabled={!!block}>{block ? CONFLICT_TEXT.option(o.label, block.by) : o.label}</option>
+                      {@const block = choiceBlock(d.id, o.id)}
+                      <!-- The current value stays enabled even if it clashes, so the reader can see it and change away. -->
+                      <option value={o.id} disabled={!!block && o.id !== r.value}>{block ? CONFLICT_TEXT.option(o.label, block.by) : o.label}</option>
                     {/each}
                   </select>
-                  {#if r.value === suggestedFor(d.id)}<small class="tag">{REVIEW.suggested}</small>{/if}
+                  {#if r.conflict}
+                    <small class="blocked" id="ad-clash-{d.id}"><strong>{CONFLICT_TEXT.blocked(r.conflict.by)}</strong> {r.conflict.reason}</small>
+                  {:else if r.value === suggestedFor(d.id)}<small class="tag">{REVIEW.suggested}</small>{/if}
                 {/if}
               </td>
               <td class="rationale">
@@ -814,6 +828,10 @@
     margin-top: 0.35rem;
     color: var(--muted);
     font-size: 0.8rem;
+  }
+
+  .choice small.blocked {
+    color: var(--text);
   }
 
   .rationale {
