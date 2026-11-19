@@ -524,6 +524,7 @@ export const CHOICE_CLASHES: Clash<DecisionId>[] = [
 ];
 
 export const CONFLICT_TEXT = {
+  selection: (by: string) => `Not compatible with the current ${by} selection.`,
   blocked: (by: string) => `Not compatible with ${by}.`,
   option: (label: string, by: string) => `${label} (not compatible with ${by})`,
 };

@@ -182,7 +182,7 @@
   );
 
   const answerBlock = (q: QuestionId, id: string) =>
-    findBlock(ANSWER_CLASHES, q, id, liveAnswers, (k, v) => `${QUESTION_BY_ID[k].label}: ${QUESTION_BY_ID[k].answers.find((x) => x.id === v)?.label ?? v}`);
+    findBlock(ANSWER_CLASHES, q, id, liveAnswers, (k) => QUESTION_BY_ID[k].label);
 
   const choiceBlock = (d: DecisionId, id: string) =>
     findBlock(CHOICE_CLASHES, d, id, choice as Partial<Record<DecisionId, string>>, (k, v) => `${decisionLabel(k)}: ${optionLabel(k, v)}`);
@@ -392,9 +392,10 @@
                 />
                 <span>
                   <b>{a.label}</b>
-                  <small>{a.detail}</small>
                   {#if block}
-                    <small class="blocked" id="ad-block-{question.id}-{a.id}"><mark><strong>{CONFLICT_TEXT.blocked(block.by)}</strong> {block.reason}</mark></small>
+                    <small class="blocked" id="ad-block-{question.id}-{a.id}">{CONFLICT_TEXT.selection(block.by)}</small>
+                  {:else}
+                    <small>{a.detail}</small>
                   {/if}
                 </span>
               </label>
@@ -471,7 +472,7 @@
                     {/each}
                   </select>
                   {#if r.conflict}
-                    <small class="blocked" id="ad-clash-{d.id}"><mark><strong>{CONFLICT_TEXT.blocked(r.conflict.by)}</strong> {r.conflict.reason}</mark></small>
+                    <small class="blocked" id="ad-clash-{d.id}"><strong>{CONFLICT_TEXT.blocked(r.conflict.by)}</strong> {r.conflict.reason}</small>
                   {:else if r.value === suggestedFor(d.id)}<small class="tag">{REVIEW.suggested}</small>{/if}
                 {/if}
               </td>
@@ -700,7 +701,6 @@
   }
 
   .option small.blocked {
-    margin-top: 0.3rem;
     color: var(--text);
   }
 
@@ -832,14 +832,6 @@
 
   .choice small.blocked {
     color: var(--text);
-  }
-
-  .blocked mark {
-    padding: 0 0.15em;
-    border-radius: 0.2em;
-    background: var(--highlight);
-    color: var(--on-highlight);
-    box-decoration-break: clone;
   }
 
   .rationale {
