@@ -394,7 +394,7 @@
                   <b>{a.label}</b>
                   <small>{a.detail}</small>
                   {#if block}
-                    <small class="blocked" id="ad-block-{question.id}-{a.id}"><strong>{CONFLICT_TEXT.blocked(block.by)}</strong> {block.reason}</small>
+                    <small class="blocked" id="ad-block-{question.id}-{a.id}"><mark><strong>{CONFLICT_TEXT.blocked(block.by)}</strong> {block.reason}</mark></small>
                   {/if}
                 </span>
               </label>
@@ -471,7 +471,7 @@
                     {/each}
                   </select>
                   {#if r.conflict}
-                    <small class="blocked" id="ad-clash-{d.id}"><strong>{CONFLICT_TEXT.blocked(r.conflict.by)}</strong> <mark>{r.conflict.reason}</mark></small>
+                    <small class="blocked" id="ad-clash-{d.id}"><mark><strong>{CONFLICT_TEXT.blocked(r.conflict.by)}</strong> {r.conflict.reason}</mark></small>
                   {:else if r.value === suggestedFor(d.id)}<small class="tag">{REVIEW.suggested}</small>{/if}
                 {/if}
               </td>
@@ -834,11 +834,11 @@
     color: var(--text);
   }
 
-  .choice small.blocked mark {
+  .blocked mark {
     padding: 0 0.15em;
     border-radius: 0.2em;
-    background: color-mix(in srgb, var(--warn) 32%, transparent);
-    color: inherit;
+    background: var(--highlight);
+    color: var(--on-highlight);
     box-decoration-break: clone;
   }
 
