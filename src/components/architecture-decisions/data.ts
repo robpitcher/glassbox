@@ -12,7 +12,7 @@ export interface Answer {
 
 export interface Question {
   id: QuestionId;
-  /** Short topic name, used when a conflict names this answer. */
+  /** Short topic name, used when an incompatible option names this answer. */
   label: string;
   stage: StageId;
   prompt: string;
@@ -494,7 +494,7 @@ export const RATIONALE = {
   override: (suggested: string) => `You changed this from the suggested ${suggested}.`,
 };
 
-/** Why two answers or choices can't both hold. Each conflict also names both sides. */
+/** Why two answers or choices can't both hold. */
 export const CONFLICTS = {
   residencyCollab: 'GHE.com requires managed users, and managed users can’t contribute outside the enterprise.',
   lifecycleCollab: 'IdP-owned accounts are managed users, and managed users can’t contribute outside the enterprise.',
@@ -503,15 +503,29 @@ export const CONFLICTS = {
   serverEmu: 'Enterprise Managed Users is an Enterprise Cloud feature.',
 };
 
+/** A pair of incompatible values: picking one disables the other. */
+export interface Clash<K extends string> {
+  a: [K, string[]];
+  b: [K, string[]];
+  reason: string;
+}
+
+const REGION_IDS = Object.keys(REGIONS);
+
+export const ANSWER_CLASHES: Clash<QuestionId>[] = [
+  { a: ['residency', REGION_IDS], b: ['collaboration', ['same']], reason: CONFLICTS.residencyCollab },
+  { a: ['lifecycle', ['idp']], b: ['collaboration', ['same']], reason: CONFLICTS.lifecycleCollab },
+];
+
+export const CHOICE_CLASHES: Clash<DecisionId>[] = [
+  { a: ['hosting', ['server']], b: ['residency', REGION_IDS], reason: CONFLICTS.serverResidency },
+  { a: ['residency', REGION_IDS], b: ['identity', ['personal']], reason: CONFLICTS.personalResidency },
+  { a: ['hosting', ['server']], b: ['identity', ['emu']], reason: CONFLICTS.serverEmu },
+];
+
 export const CONFLICT_TEXT = {
-  title: 'Conflicting requirements',
-  answersBlock: 'The account model stays undecided until you change one of these answers.',
-  choicesBlock: 'Change one of these choices, or record why the conflict is acceptable.',
-  change: 'Change',
-  with: 'Conflicts with',
-  between: 'Conflicting answers:',
-  summary: (n: number) => `${n} conflict${n === 1 ? '' : 's'} to resolve`,
-  markdown: (sides: string) => `Conflict between ${sides}:`,
+  blocked: (by: string) => `Not compatible with ${by}.`,
+  option: (label: string, by: string) => `${label} (not compatible with ${by})`,
 };
 
 export const REVIEW = {
@@ -529,7 +543,7 @@ export const REVIEW = {
   reset: 'Start over',
   status: (decided: number, total: number, open: number) =>
     open
-      ? `${decided} of ${total} decisions set. ${open} still ${open === 1 ? 'needs' : 'need'} an owner or a resolved conflict before you create the enterprise.`
+      ? `${decided} of ${total} decisions set. ${open} still ${open === 1 ? 'needs' : 'need'} an owner before you create the enterprise.`
       : `All ${total} decisions set. Review them with your stakeholders: none of these are easy to change after the enterprise exists.`,
   markdownTitle: '## GitHub Enterprise architecture decisions',
   markdownHeader: ['Decision', 'Choice', 'Change impact', 'Rationale', 'Notes'],

@@ -14,16 +14,6 @@ breadcrumb:
 updated: 2026-11-17
 ---
 
-import FactCards from '/src/components/FactCards.astro';
 import ArchitectureDecisions from '/src/components/architecture-decisions/ArchitectureDecisions.svelte';
 
-<FactCards
-  cards={[
-    { label: 'Decide before', value: 'creating the enterprise' },
-    { label: 'Data residency needs', value: 'managed users' },
-    { label: 'Shortcode', value: 'can’t change' },
-    { label: 'Organizations', value: 'easier to add than remove' },
-  ]}
-/>
-
-<ArchitectureDecisions client:visible />
+<ArchitectureDecisions client:load />

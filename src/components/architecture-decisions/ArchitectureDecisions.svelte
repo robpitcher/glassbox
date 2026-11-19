@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import {
+    ANSWER_CLASHES,
+    CHOICE_CLASHES,
     CONFLICT_TEXT,
-    CONFLICTS,
     DECISIONS,
     NAME,
     NAME_DOC_SUBDOMAIN,
@@ -16,6 +17,7 @@
     STAGES,
     STORAGE_KEY,
     UNDECIDED,
+    type Clash,
     type DecisionId,
     type Question,
     type QuestionId,
@@ -24,10 +26,9 @@
 
   type Answers = Partial<Record<QuestionId, string>>;
   type Step = QuestionId | 'review';
-  type IdentityKey = keyof typeof RATIONALE.identity | 'conflict' | 'conflictResidency';
-  /** One side of a conflict: an answer (step) or an edited choice (decision). */
-  type Side = { label: string; value: string; step?: QuestionId; decision?: DecisionId };
-  type Conflict = { id: string; sides: [Side, Side]; message: string; rows: DecisionId[] };
+  type IdentityKey = keyof typeof RATIONALE.identity;
+  /** Why an option can't be picked: the other value it clashes with, and the reason. */
+  type Block = { by: string; reason: string };
 
   const NAME_RE = /^[a-z0-9]+$/;
 
@@ -47,11 +48,11 @@
     if (a.hosting === 'server') return { value: 'instance', key: 'instance' };
     const c = a.collaboration;
     if (isRegion(a.residency)) {
-      return c === 'same' ? { value: UNDECIDED, key: 'conflictResidency' } : { value: 'emu', key: 'emuResidency' };
+      return c === 'same' ? { value: UNDECIDED, key: 'undecided' } : { value: 'emu', key: 'emuResidency' };
     }
     if (!c || c === 'unknown' || !a.lifecycle || a.lifecycle === 'unknown') return { value: UNDECIDED, key: 'undecided' };
     if (c === 'same') {
-      return a.lifecycle === 'idp' ? { value: UNDECIDED, key: 'conflict' } : { value: 'personal', key: 'personalOutside' };
+      return a.lifecycle === 'idp' ? { value: UNDECIDED, key: 'undecided' } : { value: 'personal', key: 'personalOutside' };
     }
     return a.lifecycle === 'idp' ? { value: 'emu', key: 'emu' } : { value: 'personal', key: 'personal' };
   }
@@ -127,15 +128,13 @@
         if (isRegion(value)) return RATIONALE.residency.region(REGIONS[value]);
         return value === 'github' ? RATIONALE.residency.github : value === NOT_APPLICABLE ? RATIONALE.residency.na : RATIONALE.residency.undecided;
       case 'identity': {
-        const key = suggestIdentity(a).key;
         if (value === 'emu') {
           const base = isRegion(choice.residency) ? RATIONALE.identity.emuResidency : RATIONALE.identity.emu;
           return a.collaboration === 'separate' ? `${base} ${RATIONALE.identity.separate}` : base;
         }
         if (value === 'personal') return a.collaboration === 'same' ? RATIONALE.identity.personalOutside : RATIONALE.identity.personal;
         if (value === 'instance') return RATIONALE.identity.instance;
-        // Answer conflicts explain an undecided account model themselves, so skip the generic text.
-        return key === 'conflict' || key === 'conflictResidency' ? '' : RATIONALE.identity.undecided;
+        return RATIONALE.identity.undecided;
       }
       case 'idp':
         if (value === NOT_APPLICABLE) return choice.hosting === 'server' ? RATIONALE.idp.server : RATIONALE.idp.personal;
@@ -158,58 +157,71 @@
   const suggestedFor = (id: DecisionId): string | undefined =>
     id === 'idp' ? choice.idpSuggested : id === 'name' ? undefined : suggested[id as keyof typeof suggested];
 
-  const answerSide = (q: QuestionId): Side => {
-    const question = QUESTION_BY_ID[q];
-    return { label: question.label, value: question.answers.find((x) => x.id === answers[q])?.label ?? '', step: q };
-  };
   const decisionLabel = (id: DecisionId) => DECISIONS.find((d) => d.id === id)?.label ?? id;
-  const choiceSide = (id: DecisionId): Side => ({ label: decisionLabel(id), value: optionLabel(id, choice[id]), decision: id });
 
-  // Every conflict names both sides, so readers know exactly which two decisions to reconcile.
-  const conflicts = $derived.by((): Conflict[] => {
-    const out: Conflict[] = [];
-    const key = suggestIdentity(answers).key;
-    if (choice.identity === UNDECIDED && key === 'conflictResidency') {
-      out.push({ id: 'residencyCollab', sides: [answerSide('residency'), answerSide('collaboration')], message: CONFLICTS.residencyCollab, rows: ['identity'] });
+  /** Finds the value already picked elsewhere that makes `id` incompatible for `key`. */
+  function findBlock<K extends string>(
+    clashes: Clash<K>[],
+    key: K,
+    id: string,
+    values: Partial<Record<K, string>>,
+    name: (k: K, v: string) => string,
+  ): Block | undefined {
+    for (const c of clashes) {
+      for (const [mine, other] of [[c.a, c.b], [c.b, c.a]]) {
+        if (mine[0] !== key || !mine[1].includes(id)) continue;
+        const v = values[other[0]];
+        if (v && other[1].includes(v)) return { by: name(other[0], v), reason: c.reason };
+      }
     }
-    if (choice.identity === UNDECIDED && key === 'conflict') {
-      out.push({ id: 'lifecycleCollab', sides: [answerSide('lifecycle'), answerSide('collaboration')], message: CONFLICTS.lifecycleCollab, rows: ['identity'] });
-    }
-    if (choice.hosting === 'server' && isRegion(choice.residency)) {
-      out.push({ id: 'serverResidency', sides: [choiceSide('hosting'), choiceSide('residency')], message: CONFLICTS.serverResidency, rows: ['hosting', 'residency'] });
-    }
-    if (choice.identity === 'personal' && isRegion(choice.residency)) {
-      out.push({ id: 'personalResidency', sides: [choiceSide('residency'), choiceSide('identity')], message: CONFLICTS.personalResidency, rows: ['residency', 'identity'] });
-    }
-    if (choice.hosting === 'server' && choice.identity === 'emu') {
-      out.push({ id: 'serverEmu', sides: [choiceSide('hosting'), choiceSide('identity')], message: CONFLICTS.serverEmu, rows: ['hosting', 'identity'] });
-    }
-    return out;
-  });
+  }
 
-  const sideText = (s: Side) => `${s.label} (${s.value})`;
-  const conflictText = (c: Conflict) => `${CONFLICT_TEXT.markdown(c.sides.map(sideText).join(' and '))} ${c.message}`;
+  // Answers to skipped questions don't count, so they can't block anything.
+  const liveAnswers = $derived(
+    Object.fromEntries(Object.entries(answers).filter(([q]) => applies(QUESTION_BY_ID[q as QuestionId], answers))) as Answers,
+  );
+
+  const answerBlock = (q: QuestionId, id: string) =>
+    findBlock(ANSWER_CLASHES, q, id, liveAnswers, (k, v) => `${QUESTION_BY_ID[k].label}: ${QUESTION_BY_ID[k].answers.find((x) => x.id === v)?.label ?? v}`);
+
+  const choiceBlock = (d: DecisionId, id: string) =>
+    findBlock(CHOICE_CLASHES, d, id, choice as Partial<Record<DecisionId, string>>, (k, v) => `${decisionLabel(k)}: ${optionLabel(k, v)}`);
+
+  /** Drops saved answers and edits that became incompatible, such as after an earlier answer changed. */
+  function prune() {
+    for (const q of QUESTIONS) {
+      const v = answers[q.id];
+      if (v && answerBlock(q.id, v)) {
+        const { [q.id]: _, ...rest } = answers;
+        answers = rest;
+      }
+    }
+    for (const id of Object.keys(overrides) as DecisionId[]) {
+      const v = overrides[id];
+      if (v && choiceBlock(id, v)) {
+        const { [id]: _, ...rest } = overrides;
+        overrides = rest;
+      }
+    }
+  }
 
   const rows = $derived(
     DECISIONS.map((d) => {
       const value = choice[d.id];
       const sug = suggestedFor(d.id);
       const changed = sug !== undefined && overrides[d.id] !== undefined && overrides[d.id] !== sug;
-      const rowConflicts = conflicts.filter((c) => c.rows.includes(d.id));
-      const open = value === UNDECIDED || (d.id === 'name' && (!value || !NAME_RE.test(value))) || rowConflicts.length > 0;
+      const open = value === UNDECIDED || (d.id === 'name' && (!value || !NAME_RE.test(value)));
       return {
         decision: d,
         value,
         rationale: rationaleFor(d.id, value),
         override: changed ? RATIONALE.override(optionLabel(d.id, sug!)) : undefined,
-        conflicts: rowConflicts,
         open,
         doc: d.id === 'name' && subdomain ? NAME_DOC_SUBDOMAIN : d.doc,
       };
     }),
   );
 
-  const stepConflicts = $derived(question ? conflicts.filter((c) => c.sides.some((s) => s.step === question.id)) : []);
   const openCount = $derived(rows.filter((r) => r.open).length);
   const currentStage = $derived(question ? question.stage : 'review');
   const stageReachable = (s: StageId) => s === 'review' || active.some((q) => q.stage === s);
@@ -229,12 +241,6 @@
     if (q) go(q.id);
   }
 
-  async function goSide(s: Side) {
-    if (s.step) return go(s.step);
-    await go('review', false);
-    document.getElementById(`ad-choice-${s.decision}`)?.focus();
-  }
-
   const answered = $derived(question ? (question.id === 'name' ? nameValid : !!answers[question.id]) : true);
 
   function next() {
@@ -252,6 +258,7 @@
   function choose(id: string) {
     if (!question) return;
     answers = { ...answers, [question.id]: id };
+    prune();
   }
 
   function setOverride(id: DecisionId, value: string) {
@@ -276,7 +283,7 @@
     const head = REVIEW.markdownHeader;
     const lines = [REVIEW.markdownTitle, '', `| ${head.join(' | ')} |`, `| ${head.map(() => '---').join(' | ')} |`];
     for (const r of rows) {
-      const why = [...r.conflicts.map(conflictText), r.rationale, r.override].filter(Boolean).join(' ');
+      const why = [r.rationale, r.override].filter(Boolean).join(' ');
       lines.push(
         `| ${[r.decision.label, optionLabel(r.decision.id, r.value), r.decision.impact, why, notes[r.decision.id] ?? ''].map(cell).join(' | ')} |`,
       );
@@ -302,6 +309,7 @@
         name = typeof s.name === 'string' ? s.name : '';
         overrides = s.overrides ?? {};
         notes = s.notes ?? {};
+        prune();
         const step = s.current as Step;
         current = step === 'review' || QUESTIONS.some((q) => q.id === step && applies(q, answers)) ? step : 'hosting';
       }
@@ -317,28 +325,6 @@
     } catch {}
   });
 </script>
-
-{#snippet conflictList(list: Conflict[], from?: QuestionId)}
-  <div class="conflict" role="note">
-    <p class="conflict-title">{list.length > 1 ? CONFLICT_TEXT.summary(list.length) : CONFLICT_TEXT.title}</p>
-    {#each list as c (c.id)}
-      <div class="conflict-item">
-        <ul>
-          {#each c.sides as s (s.label)}
-            <li>
-              <span class="side-label">{s.label}</span>
-              <span class="side-value">{s.value}</span>
-              {#if !from || s.step !== from}
-                <button type="button" class="link" onclick={() => goSide(s)}>{CONFLICT_TEXT.change}<span class="sr"> {s.label}</span></button>
-              {/if}
-            </li>
-          {/each}
-        </ul>
-        <p>{c.message} {c.sides[0].step ? CONFLICT_TEXT.answersBlock : CONFLICT_TEXT.choicesBlock}</p>
-      </div>
-    {/each}
-  </div>
-{/snippet}
 
 <section class="quiz" aria-label={QUIZ.label}>
   <nav class="steps" aria-label={QUIZ.trailLabel}>
@@ -389,21 +375,29 @@
         {:else}
           <div class="options">
             {#each question.answers as a (a.id)}
-              <label class="option">
-                <input type="radio" name="ad-{question.id}" value={a.id} checked={answers[question.id] === a.id} onchange={() => choose(a.id)} />
+              {@const block = answerBlock(question.id, a.id)}
+              <label class="option" class:is-blocked={block}>
+                <input
+                  type="radio"
+                  name="ad-{question.id}"
+                  value={a.id}
+                  checked={answers[question.id] === a.id}
+                  disabled={!!block}
+                  aria-describedby={block ? `ad-block-${question.id}-${a.id}` : undefined}
+                  onchange={() => choose(a.id)}
+                />
                 <span>
                   <b>{a.label}</b>
                   <small>{a.detail}</small>
+                  {#if block}
+                    <small class="blocked" id="ad-block-{question.id}-{a.id}"><strong>{CONFLICT_TEXT.blocked(block.by)}</strong> {block.reason}</small>
+                  {/if}
                 </span>
               </label>
             {/each}
           </div>
         {/if}
       </fieldset>
-
-      {#if stepConflicts.length}
-        {@render conflictList(stepConflicts, question.id)}
-      {/if}
 
       <p class="why">
         <strong>{QUIZ.whyLabel}:</strong>
@@ -413,7 +407,7 @@
       </p>
 
       <div class="nav">
-        <button type="button" class="btn" onclick={back} disabled={index === 0}>{QUIZ.back}</button>
+        {#if index > 0}<button type="button" class="btn" onclick={back}>{QUIZ.back}</button>{/if}
         <button type="submit" class="btn primary" disabled={!answered}>
           {index === active.length - 1 ? QUIZ.finish : QUIZ.next}
         </button>
@@ -424,10 +418,6 @@
       <h2 tabindex="-1" bind:this={heading}>{REVIEW.title}</h2>
       <p class="desc">{REVIEW.description}</p>
       <p class="status">{REVIEW.status(rows.length - openCount, rows.length, openCount)}</p>
-
-      {#if conflicts.length}
-        {@render conflictList(conflicts)}
-      {/if}
 
       <table>
         <thead>
@@ -464,20 +454,14 @@
                 {:else}
                   <select id="ad-choice-{d.id}" aria-label="{d.label} choice" value={r.value} onchange={(e) => setOverride(d.id, e.currentTarget.value)}>
                     {#each d.options as o (o.id)}
-                      <option value={o.id}>{o.label}</option>
+                      {@const block = o.id === r.value ? undefined : choiceBlock(d.id, o.id)}
+                      <option value={o.id} disabled={!!block}>{block ? CONFLICT_TEXT.option(o.label, block.by) : o.label}</option>
                     {/each}
                   </select>
                   {#if r.value === suggestedFor(d.id)}<small class="tag">{REVIEW.suggested}</small>{/if}
                 {/if}
               </td>
               <td class="rationale">
-                {#each r.conflicts as c (c.id)}
-                  {@const others = c.sides.filter((s) => s.decision !== d.id)}
-                  <p class="warn">
-                    <strong>{others.length < c.sides.length ? CONFLICT_TEXT.with : CONFLICT_TEXT.between}</strong>
-                    {others.map(sideText).join(' and ')}. {c.message}
-                  </p>
-                {/each}
                 {#if r.rationale}<p>{r.rationale}</p>{/if}
                 {#if r.override}<p class="muted">{r.override}</p>{/if}
                 <a href={r.doc} target="_blank" rel="noopener">{REVIEW.docLink}</a>
@@ -691,68 +675,19 @@
     font-weight: 600;
   }
 
-  /* Conflicts name both sides so readers know exactly what to reconcile. */
-  .conflict {
-    display: grid;
-    gap: 0.75rem;
-    margin-top: 1.25rem;
-    padding: 0.85rem 1rem;
-    border-left: 3px solid var(--warn);
-    background: color-mix(in srgb, var(--warn) 8%, transparent);
-    font-size: 0.9rem;
-    line-height: 1.5;
+  /* Incompatible options stay visible but can't be picked; the note names what blocks them. */
+  .option.is-blocked {
+    cursor: not-allowed;
   }
 
-  .conflict-title {
-    font-weight: 700;
+  .option.is-blocked b {
+    color: var(--muted);
+    text-decoration: line-through;
   }
 
-  .conflict ul {
-    display: grid;
-    gap: 0.3rem;
-    margin: 0 0 0.35rem;
-    padding: 0;
-    list-style: none;
-  }
-
-  .conflict li {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.2rem 0.5rem;
-    align-items: baseline;
-  }
-
-  .side-label {
-    font-weight: 700;
-  }
-
-  .side-label::after {
-    content: ':';
-  }
-
-  .conflict-item + .conflict-item {
-    padding-top: 0.75rem;
-    border-top: 1px solid color-mix(in srgb, var(--warn) 35%, var(--border));
-  }
-
-  .link {
-    padding: 0;
-    border: 0;
-    background: none;
-    color: var(--accent);
-    font: inherit;
-    font-weight: 600;
-    text-decoration: underline;
-    cursor: pointer;
-  }
-
-  .sr {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+  .option small.blocked {
+    margin-top: 0.3rem;
+    color: var(--text);
   }
 
   .nav,
@@ -765,6 +700,10 @@
   .nav {
     justify-content: space-between;
     margin-top: 1.5rem;
+  }
+
+  .step .nav .primary {
+    margin-left: auto;
   }
 
   .btn {
@@ -797,7 +736,6 @@
 
   .steps button:focus-visible,
   .btn:focus-visible,
-  .link:focus-visible,
   .option input:focus-visible,
   input:focus-visible,
   select:focus-visible,
@@ -887,11 +825,6 @@
 
   .muted {
     color: var(--muted);
-  }
-
-  .warn {
-    padding-left: 0.6rem;
-    border-left: 3px solid var(--warn);
   }
 
   .notes {
