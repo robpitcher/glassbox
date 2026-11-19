@@ -1,9 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
-  import InfoBar from '../ui/InfoBar.svelte';
-  import SectionHead from '../ui/SectionHead.svelte';
   import {
-    CONFLICT_NOTICE,
+    CONFLICT_TEXT,
     CONFLICTS,
     DECISIONS,
     NAME,
@@ -11,17 +9,14 @@
     NOT_APPLICABLE,
     QUESTIONS,
     QUESTION_BY_ID,
+    QUIZ,
     RATIONALE,
     REGIONS,
     REVIEW,
-    STAGE_EMPTY,
-    STAGE_REVIEW,
     STAGES,
     STORAGE_KEY,
     UNDECIDED,
-    VISUAL,
     type DecisionId,
-    type Info,
     type Question,
     type QuestionId,
     type StageId,
@@ -29,7 +24,10 @@
 
   type Answers = Partial<Record<QuestionId, string>>;
   type Step = QuestionId | 'review';
-  type IdentityKey = keyof typeof RATIONALE.identity;
+  type IdentityKey = keyof typeof RATIONALE.identity | 'conflict' | 'conflictResidency';
+  /** One side of a conflict: an answer (step) or an edited choice (decision). */
+  type Side = { label: string; value: string; step?: QuestionId; decision?: DecisionId };
+  type Conflict = { id: string; sides: [Side, Side]; message: string; rows: DecisionId[] };
 
   const NAME_RE = /^[a-z0-9]+$/;
 
@@ -115,10 +113,9 @@
   const subdomain = $derived(isRegion(choice.residency));
   const nameValid = $derived(name === '' || NAME_RE.test(name));
 
-  function optionLabel(id: DecisionId, value: string, short = false): string {
+  function optionLabel(id: DecisionId, value: string): string {
     if (id === 'name') return value === NOT_APPLICABLE ? 'Not applicable' : value ? (subdomain ? NAME.subdomainPreview(value) : value) : 'Not chosen';
-    const o = DECISIONS.find((d) => d.id === id)?.options.find((x) => x.id === value);
-    return (short && o?.short) || o?.label || value;
+    return DECISIONS.find((d) => d.id === id)?.options.find((x) => x.id === value)?.label ?? value;
   }
 
   function rationaleFor(id: DecisionId, value: string): string {
@@ -137,7 +134,8 @@
         }
         if (value === 'personal') return a.collaboration === 'same' ? RATIONALE.identity.personalOutside : RATIONALE.identity.personal;
         if (value === 'instance') return RATIONALE.identity.instance;
-        return key === 'conflict' || key === 'conflictResidency' ? RATIONALE.identity[key] : RATIONALE.identity.undecided;
+        // Answer conflicts explain an undecided account model themselves, so skip the generic text.
+        return key === 'conflict' || key === 'conflictResidency' ? '' : RATIONALE.identity.undecided;
       }
       case 'idp':
         if (value === NOT_APPLICABLE) return choice.hosting === 'server' ? RATIONALE.idp.server : RATIONALE.idp.personal;
@@ -160,47 +158,62 @@
   const suggestedFor = (id: DecisionId): string | undefined =>
     id === 'idp' ? choice.idpSuggested : id === 'name' ? undefined : suggested[id as keyof typeof suggested];
 
-  const conflicts = $derived.by(() => {
-    const out: Partial<Record<DecisionId, string>> = {};
-    if (choice.hosting === 'server' && isRegion(choice.residency)) out.residency = CONFLICTS.serverResidency;
-    if (choice.identity === 'personal' && isRegion(choice.residency)) out.identity = CONFLICTS.personalResidency;
-    if (choice.hosting === 'server' && choice.identity === 'emu') out.identity = CONFLICTS.serverEmu;
+  const answerSide = (q: QuestionId): Side => {
+    const question = QUESTION_BY_ID[q];
+    return { label: question.label, value: question.answers.find((x) => x.id === answers[q])?.label ?? '', step: q };
+  };
+  const decisionLabel = (id: DecisionId) => DECISIONS.find((d) => d.id === id)?.label ?? id;
+  const choiceSide = (id: DecisionId): Side => ({ label: decisionLabel(id), value: optionLabel(id, choice[id]), decision: id });
+
+  // Every conflict names both sides, so readers know exactly which two decisions to reconcile.
+  const conflicts = $derived.by((): Conflict[] => {
+    const out: Conflict[] = [];
+    const key = suggestIdentity(answers).key;
+    if (choice.identity === UNDECIDED && key === 'conflictResidency') {
+      out.push({ id: 'residencyCollab', sides: [answerSide('residency'), answerSide('collaboration')], message: CONFLICTS.residencyCollab, rows: ['identity'] });
+    }
+    if (choice.identity === UNDECIDED && key === 'conflict') {
+      out.push({ id: 'lifecycleCollab', sides: [answerSide('lifecycle'), answerSide('collaboration')], message: CONFLICTS.lifecycleCollab, rows: ['identity'] });
+    }
+    if (choice.hosting === 'server' && isRegion(choice.residency)) {
+      out.push({ id: 'serverResidency', sides: [choiceSide('hosting'), choiceSide('residency')], message: CONFLICTS.serverResidency, rows: ['hosting', 'residency'] });
+    }
+    if (choice.identity === 'personal' && isRegion(choice.residency)) {
+      out.push({ id: 'personalResidency', sides: [choiceSide('residency'), choiceSide('identity')], message: CONFLICTS.personalResidency, rows: ['residency', 'identity'] });
+    }
+    if (choice.hosting === 'server' && choice.identity === 'emu') {
+      out.push({ id: 'serverEmu', sides: [choiceSide('hosting'), choiceSide('identity')], message: CONFLICTS.serverEmu, rows: ['hosting', 'identity'] });
+    }
     return out;
   });
+
+  const sideText = (s: Side) => `${s.label} (${s.value})`;
+  const conflictText = (c: Conflict) => `${CONFLICT_TEXT.markdown(c.sides.map(sideText).join(' and '))} ${c.message}`;
 
   const rows = $derived(
     DECISIONS.map((d) => {
       const value = choice[d.id];
       const sug = suggestedFor(d.id);
       const changed = sug !== undefined && overrides[d.id] !== undefined && overrides[d.id] !== sug;
-      const open = value === UNDECIDED || (d.id === 'name' && (!value || !NAME_RE.test(value))) || !!conflicts[d.id];
+      const rowConflicts = conflicts.filter((c) => c.rows.includes(d.id));
+      const open = value === UNDECIDED || (d.id === 'name' && (!value || !NAME_RE.test(value))) || rowConflicts.length > 0;
       return {
         decision: d,
         value,
         rationale: rationaleFor(d.id, value),
         override: changed ? RATIONALE.override(optionLabel(d.id, sug!)) : undefined,
-        conflict: conflicts[d.id],
+        conflicts: rowConflicts,
         open,
         doc: d.id === 'name' && subdomain ? NAME_DOC_SUBDOMAIN : d.doc,
       };
     }),
   );
 
-  // Trail: one cell per stage, showing the choice it led to.
-  const stageValue = (s: StageId): string | null => {
-    const qs = active.filter((q) => q.stage === s);
-    if (s === 'review') return active.every((q) => q.id === 'name' || answers[q.id]) ? STAGE_REVIEW.ready : STAGE_REVIEW.pending;
-    if (!qs.length) return null;
-    const touched = qs.some((q) => (q.id === 'name' ? name : answers[q.id]));
-    if (!touched) return STAGE_EMPTY;
-    const id: DecisionId = s === 'structure' ? 'orgs' : (s as DecisionId);
-    return optionLabel(id, choice[id], true);
-  };
-
-  const stageOpen = (s: StageId) =>
-    s !== 'review' && rows.some((r) => r.open && (r.decision.id === (s === 'structure' ? 'orgs' : s) || (s === 'identity' && r.decision.id === 'idp')));
+  const stepConflicts = $derived(question ? conflicts.filter((c) => c.sides.some((s) => s.step === question.id)) : []);
+  const openCount = $derived(rows.filter((r) => r.open).length);
   const currentStage = $derived(question ? question.stage : 'review');
-  const progress = $derived(current === 'review' ? 100 : Math.round((index / active.length) * 100));
+  const stageReachable = (s: StageId) => s === 'review' || active.some((q) => q.stage === s);
+  const stageDone = (s: StageId) => s !== 'review' && active.filter((q) => q.stage === s).every((q) => (q.id === 'name' ? !!name : !!answers[q.id]));
 
   async function go(step: Step, focus = true) {
     current = step;
@@ -214,6 +227,12 @@
     if (s === 'review') return go('review');
     const q = active.find((x) => x.stage === s);
     if (q) go(q.id);
+  }
+
+  async function goSide(s: Side) {
+    if (s.step) return go(s.step);
+    await go('review', false);
+    document.getElementById(`ad-choice-${s.decision}`)?.focus();
   }
 
   const answered = $derived(question ? (question.id === 'name' ? nameValid : !!answers[question.id]) : true);
@@ -233,12 +252,6 @@
   function choose(id: string) {
     if (!question) return;
     answers = { ...answers, [question.id]: id };
-  }
-
-  function clearAnswer() {
-    if (!question || question.id === 'name' || !answers[question.id]) return;
-    const { [question.id]: _, ...rest } = answers;
-    answers = rest;
   }
 
   function setOverride(id: DecisionId, value: string) {
@@ -263,7 +276,7 @@
     const head = REVIEW.markdownHeader;
     const lines = [REVIEW.markdownTitle, '', `| ${head.join(' | ')} |`, `| ${head.map(() => '---').join(' | ')} |`];
     for (const r of rows) {
-      const why = [r.conflict && `${REVIEW.conflictPrefix} ${r.conflict}`, r.rationale, r.override].filter(Boolean).join(' ');
+      const why = [...r.conflicts.map(conflictText), r.rationale, r.override].filter(Boolean).join(' ');
       lines.push(
         `| ${[r.decision.label, optionLabel(r.decision.id, r.value), r.decision.impact, why, notes[r.decision.id] ?? ''].map(cell).join(' | ')} |`,
       );
@@ -303,41 +316,44 @@
       localStorage.setItem(STORAGE_KEY, data);
     } catch {}
   });
-
-  const selectedAnswer = $derived(question ? question.answers.find((a) => a.id === answers[question.id]) : undefined);
-  const conflictHere = $derived(
-    !!question && (question.id === 'collaboration' || question.id === 'lifecycle') && suggestIdentity(answers).key.startsWith('conflict'),
-  );
-  const openCount = $derived(rows.filter((r) => r.open).length);
-
-  const info = $derived.by((): Info => {
-    if (!question) return REVIEW.info(rows.length - openCount, rows.length, openCount);
-    if (question.id === 'name') return name && nameValid ? NAME.answeredInfo(name, subdomain) : question.info;
-    return selectedAnswer?.info ?? question.info;
-  });
 </script>
 
-<section class="visual" aria-labelledby="ad-title" onkeydown={(e) => e.key === 'Escape' && clearAnswer()}>
-  <SectionHead n={1} id="ad-title" title={VISUAL.title}>{VISUAL.description}</SectionHead>
+{#snippet conflictList(list: Conflict[], from?: QuestionId)}
+  <div class="conflict" role="note">
+    <p class="conflict-title">{list.length > 1 ? CONFLICT_TEXT.summary(list.length) : CONFLICT_TEXT.title}</p>
+    {#each list as c (c.id)}
+      <div class="conflict-item">
+        <ul>
+          {#each c.sides as s (s.label)}
+            <li>
+              <span class="side-label">{s.label}</span>
+              <span class="side-value">{s.value}</span>
+              {#if !from || s.step !== from}
+                <button type="button" class="link" onclick={() => goSide(s)}>{CONFLICT_TEXT.change}<span class="sr"> {s.label}</span></button>
+              {/if}
+            </li>
+          {/each}
+        </ul>
+        <p>{c.message} {c.sides[0].step ? CONFLICT_TEXT.answersBlock : CONFLICT_TEXT.choicesBlock}</p>
+      </div>
+    {/each}
+  </div>
+{/snippet}
 
-  <nav class="trail" aria-label={VISUAL.trailLabel}>
-    <span class="bar" aria-hidden="true"><span style="clip-path: inset(0 {100 - progress}% 0 0)"></span></span>
+<section class="quiz" aria-label={QUIZ.label}>
+  <nav class="steps" aria-label={QUIZ.trailLabel}>
     <ol>
-      {#each STAGES as s, i (s.id)}
-        {@const value = stageValue(s.id)}
+      {#each STAGES as s (s.id)}
         <li>
           <button
             type="button"
-            class="stage"
             class:is-current={currentStage === s.id}
-            class:is-open={stageOpen(s.id) && value !== STAGE_EMPTY}
+            class:is-done={stageDone(s.id)}
             aria-current={currentStage === s.id ? 'step' : undefined}
-            disabled={value === null}
+            disabled={!stageReachable(s.id)}
             onclick={() => goStage(s.id)}
           >
-            <span class="num" aria-hidden="true">{i + 1}</span>
-            <span class="visual-label">{s.label}</span>
-            <span class="val">{value ?? 'Not applicable'}</span>
+            {s.label}
           </button>
         </li>
       {/each}
@@ -345,15 +361,17 @@
   </nav>
 
   {#if question}
-    <div class="step">
-      <div class="ask">
-        <span class="visual-label">{VISUAL.step(index + 1, active.length)}</span>
-        <h3 tabindex="-1" bind:this={heading}>{question.prompt}</h3>
+    <form class="step" onsubmit={(e) => (e.preventDefault(), next())}>
+      <p class="count">{QUIZ.step(index + 1, active.length)}</p>
+      <fieldset>
+        <legend>
+          <h2 tabindex="-1" bind:this={heading}>{question.prompt}</h2>
+        </legend>
         <p class="desc">{question.description}</p>
 
         {#if question.id === 'name'}
           <label class="field">
-            <span class="visual-label">{subdomain ? NAME.subdomainLabel : NAME.shortcodeLabel}</span>
+            <span class="field-label">{subdomain ? NAME.subdomainLabel : NAME.shortcodeLabel}</span>
             <input
               type="text"
               bind:value={name}
@@ -369,55 +387,47 @@
             </span>
           </label>
         {:else}
-          <div class="answers" role="group" aria-label={question.prompt}>
+          <div class="options">
             {#each question.answers as a (a.id)}
-              <button
-                type="button"
-                class="answer"
-                class:is-unknown={a.id === 'unknown'}
-                aria-pressed={answers[question.id] === a.id}
-                onclick={() => choose(a.id)}
-              >
-                <span class="mark" aria-hidden="true"></span>
-                <b>{a.label}</b>
-                <small>{a.detail}</small>
-              </button>
+              <label class="option">
+                <input type="radio" name="ad-{question.id}" value={a.id} checked={answers[question.id] === a.id} onchange={() => choose(a.id)} />
+                <span>
+                  <b>{a.label}</b>
+                  <small>{a.detail}</small>
+                </span>
+              </label>
             {/each}
           </div>
         {/if}
+      </fieldset>
 
-        {#if conflictHere}
-          <p class="notice" role="note"><span aria-hidden="true">!</span> {CONFLICT_NOTICE}</p>
-        {/if}
+      {#if stepConflicts.length}
+        {@render conflictList(stepConflicts, question.id)}
+      {/if}
 
-        <div class="nav">
-          <button type="button" class="btn" onclick={back} disabled={index === 0}>{VISUAL.back}</button>
-          <button type="button" class="btn primary" onclick={next} disabled={!answered}>
-            {index === active.length - 1 ? VISUAL.finish : VISUAL.next}
-          </button>
-        </div>
-      </div>
-
-      <aside class="context">
-        <span class="visual-label">Why it’s hard to change</span>
-        <b>{question.context.title}</b>
-        <p>{question.context.text}</p>
+      <p class="why">
+        <strong>{QUIZ.whyLabel}:</strong>
+        {question.context.title}.
+        {question.context.text}
         <a href={question.doc.href} target="_blank" rel="noopener">{question.doc.label}</a>
-      </aside>
-    </div>
+      </p>
+
+      <div class="nav">
+        <button type="button" class="btn" onclick={back} disabled={index === 0}>{QUIZ.back}</button>
+        <button type="submit" class="btn primary" disabled={!answered}>
+          {index === active.length - 1 ? QUIZ.finish : QUIZ.next}
+        </button>
+      </div>
+    </form>
   {:else}
     <div class="review">
-      <div class="review-head">
-        <div>
-          <h3 tabindex="-1" bind:this={heading}>{REVIEW.title}</h3>
-          <p class="desc">{REVIEW.description}</p>
-        </div>
-        <div class="actions">
-          <button type="button" class="btn" onclick={() => go('hosting')}>{REVIEW.edit}</button>
-          <button type="button" class="btn" onclick={reset}>{REVIEW.reset}</button>
-          <button type="button" class="btn primary" onclick={copy}>{REVIEW.copy}</button>
-        </div>
-      </div>
+      <h2 tabindex="-1" bind:this={heading}>{REVIEW.title}</h2>
+      <p class="desc">{REVIEW.description}</p>
+      <p class="status">{REVIEW.status(rows.length - openCount, rows.length, openCount)}</p>
+
+      {#if conflicts.length}
+        {@render conflictList(conflicts)}
+      {/if}
 
       <table>
         <thead>
@@ -441,6 +451,7 @@
                     <span class="na">Not applicable</span>
                   {:else}
                     <input
+                      id="ad-choice-name"
                       type="text"
                       bind:value={name}
                       placeholder={NAME.placeholder}
@@ -451,7 +462,7 @@
                     {#if subdomain && name && nameValid}<small>{NAME.subdomainPreview(name)}</small>{/if}
                   {/if}
                 {:else}
-                  <select aria-label="{d.label} choice" value={r.value} onchange={(e) => setOverride(d.id, e.currentTarget.value)}>
+                  <select id="ad-choice-{d.id}" aria-label="{d.label} choice" value={r.value} onchange={(e) => setOverride(d.id, e.currentTarget.value)}>
                     {#each d.options as o (o.id)}
                       <option value={o.id}>{o.label}</option>
                     {/each}
@@ -459,13 +470,19 @@
                   {#if r.value === suggestedFor(d.id)}<small class="tag">{REVIEW.suggested}</small>{/if}
                 {/if}
               </td>
-              <td class="why">
-                {#if r.conflict}<p class="warn"><span aria-hidden="true">!</span> {r.conflict}</p>{/if}
-                <p>{r.rationale}</p>
+              <td class="rationale">
+                {#each r.conflicts as c (c.id)}
+                  {@const others = c.sides.filter((s) => s.decision !== d.id)}
+                  <p class="warn">
+                    <strong>{others.length < c.sides.length ? CONFLICT_TEXT.with : CONFLICT_TEXT.between}</strong>
+                    {others.map(sideText).join(' and ')}. {c.message}
+                  </p>
+                {/each}
+                {#if r.rationale}<p>{r.rationale}</p>{/if}
                 {#if r.override}<p class="muted">{r.override}</p>{/if}
                 <a href={r.doc} target="_blank" rel="noopener">{REVIEW.docLink}</a>
                 <label class="notes">
-                  <span class="visual-label">{REVIEW.notesLabel}</span>
+                  <span class="field-label">{REVIEW.notesLabel}</span>
                   <textarea
                     rows="2"
                     placeholder={REVIEW.notesPlaceholder}
@@ -478,214 +495,140 @@
           {/each}
         </tbody>
       </table>
+
+      <div class="nav">
+        <button type="button" class="btn" onclick={back}>{QUIZ.back}</button>
+        <div class="actions">
+          <button type="button" class="btn" onclick={reset}>{REVIEW.reset}</button>
+          <button type="button" class="btn primary" onclick={copy}>{REVIEW.copy}</button>
+        </div>
+      </div>
+      <p class="copy-note" aria-live="polite">{copyNote ?? ''}</p>
     </div>
   {/if}
 
-  <p class="saved">{VISUAL.saved}</p>
-  <InfoBar lead={info.lead} text={info.text} note={current === 'review' ? copyNote : undefined} />
+  <p class="saved">{QUIZ.saved}</p>
 </section>
 
 <style>
-  /* Decision trail */
-  .trail {
-    position: relative;
-    margin-top: 1.5rem;
+  .quiz {
+    container-type: inline-size;
+    max-width: 52rem;
+    margin-top: 2rem;
   }
 
-  .bar {
-    display: block;
-    height: 3px;
-    margin-bottom: 0.6rem;
-    border-radius: var(--radius-pill);
-    background: var(--border);
-    overflow: hidden;
-  }
-
-  .bar span {
-    display: block;
-    height: 100%;
-    background: var(--accent-grad);
-    transition: clip-path var(--dur) var(--ease);
-  }
-
-  .trail ol {
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 0.5rem;
+  /* Step list: plain text, current step underlined. */
+  .steps ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
     margin: 0;
-    padding: 0;
+    padding: 0 0 0.75rem;
+    border-bottom: 1px solid var(--border);
     list-style: none;
   }
 
-  .stage {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.1rem 0.5rem;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    padding: 0.55rem 0.65rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--text);
+  .steps button {
+    padding: 0.2rem 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--muted);
     font: inherit;
-    text-align: left;
+    font-size: 0.88rem;
+    font-weight: 600;
     cursor: pointer;
-    transition:
-      border-color var(--dur) var(--ease),
-      background-color var(--dur) var(--ease);
   }
 
-  .stage:hover:not(:disabled) {
-    border-color: var(--border-strong);
+  .steps button.is-done {
+    color: var(--text);
   }
 
-  .stage:disabled {
+  .steps button.is-current {
+    border-bottom-color: var(--accent);
+    color: var(--text);
+  }
+
+  .steps button:disabled {
+    color: var(--muted);
+    text-decoration: line-through;
     cursor: default;
-    border-style: dashed;
-    background: transparent;
   }
 
-  .stage:disabled .val {
+  .step,
+  .review {
+    margin-top: 1.5rem;
+  }
+
+  .count {
     color: var(--muted);
+    font-size: 0.85rem;
   }
 
-  .stage.is-current {
-    border-color: var(--accent);
-    background: var(--accent-soft);
+  fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
   }
 
-  .stage.is-open:not(.is-current) {
-    border-color: color-mix(in srgb, var(--warn) 60%, var(--border));
+  legend {
+    padding: 0;
   }
 
-  .num {
-    display: inline-grid;
-    grid-row: 1 / 3;
-    width: 1.4rem;
-    height: 1.4rem;
-    place-items: center;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-pill);
-    color: var(--muted);
-    font-size: 0.72rem;
-    font-weight: 800;
-  }
-
-  .is-current .num {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--on-accent);
-  }
-
-  .val {
-    overflow: hidden;
-    font-size: 0.8rem;
-    font-weight: 650;
+  h2 {
+    margin: 0.25rem 0 0;
+    font-size: clamp(1.15rem, 2.6vw, 1.4rem);
     line-height: 1.25;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    letter-spacing: -0.01em;
   }
 
-  .stage:focus-visible,
-  .answer:focus-visible,
-  .btn:focus-visible,
-  h3:focus-visible,
-  input:focus-visible,
-  select:focus-visible,
-  textarea:focus-visible,
-  a:focus-visible {
-    outline: 2px solid var(--accent-2);
-    outline-offset: 2px;
-  }
-
-  h3:focus:not(:focus-visible) {
+  h2:focus {
     outline: none;
-  }
-
-  /* Question step */
-  .step {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 18rem);
-    gap: 1.25rem;
-    margin-top: 1.25rem;
-  }
-
-  h3 {
-    margin-top: 0.4rem;
-    font-size: clamp(1.15rem, 2.6vw, 1.45rem);
-    line-height: 1.2;
-    letter-spacing: -0.02em;
   }
 
   .desc {
     margin-top: 0.4rem;
     color: var(--muted);
-    line-height: 1.5;
+    line-height: 1.55;
   }
 
-  .answers {
+  .options {
     display: grid;
-    gap: 0.5rem;
     margin-top: 1rem;
   }
 
-  .answer {
+  .option {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.15rem 0.7rem;
-    width: 100%;
-    padding: 0.7rem 0.85rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--surface-solid);
-    color: var(--text);
-    font: inherit;
-    text-align: left;
+    gap: 0.75rem;
+    padding: 0.7rem 0;
+    border-top: 1px solid var(--border);
     cursor: pointer;
-    transition:
-      border-color var(--dur) var(--ease),
-      background-color var(--dur) var(--ease);
   }
 
-  .answer:hover {
-    border-color: var(--border-strong);
+  .option:last-child {
+    border-bottom: 1px solid var(--border);
   }
 
-  .answer.is-unknown {
-    border-style: dashed;
-  }
-
-  .answer[aria-pressed='true'] {
-    border-color: var(--accent);
-    border-style: solid;
-    background: color-mix(in srgb, var(--accent) 10%, var(--surface-solid));
-  }
-
-  .mark {
-    grid-row: 1 / 3;
+  .option input {
     width: 1rem;
     height: 1rem;
+    margin: 0.2rem 0 0;
+    accent-color: var(--accent);
+  }
+
+  .option b {
+    display: block;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .option small {
+    display: block;
     margin-top: 0.15rem;
-    border: 2px solid var(--border-strong);
-    border-radius: var(--radius-pill);
-    transition: border-color var(--dur) var(--ease);
-  }
-
-  [aria-pressed='true'] .mark {
-    border: 5px solid var(--accent);
-  }
-
-  .answer b {
-    font-weight: 700;
-    line-height: 1.3;
-  }
-
-  .answer small {
     color: var(--muted);
-    font-size: 0.85rem;
-    line-height: 1.4;
+    font-size: 0.88rem;
+    line-height: 1.45;
   }
 
   .field {
@@ -695,11 +638,17 @@
     margin-top: 1rem;
   }
 
-  input,
+  .field-label {
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  input[type='text'],
   select,
   textarea {
     width: 100%;
-    padding: 0.55rem 0.7rem;
+    padding: 0.5rem 0.65rem;
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-sm);
     background: var(--surface-solid);
@@ -707,7 +656,7 @@
     font: inherit;
   }
 
-  input {
+  input[type='text'] {
     font-family: var(--font-mono);
   }
 
@@ -726,36 +675,84 @@
     font-family: var(--font-sans);
   }
 
-  .notice,
-  .warn {
-    display: flex;
-    gap: 0.5rem;
-    align-items: flex-start;
-    color: var(--text);
-    line-height: 1.45;
-  }
-
-  .notice {
-    margin-top: 0.85rem;
-    padding: 0.6rem 0.8rem;
-    border: 1px solid color-mix(in srgb, var(--warn) 60%, var(--border));
-    border-radius: var(--radius-sm);
-    background: color-mix(in srgb, var(--warn) 10%, var(--surface-solid));
+  .why {
+    margin-top: 1.25rem;
+    color: var(--muted);
     font-size: 0.9rem;
+    line-height: 1.55;
   }
 
-  .notice span,
-  .warn span {
-    display: inline-grid;
-    flex: 0 0 auto;
-    width: 1.2rem;
-    height: 1.2rem;
-    place-items: center;
-    border-radius: var(--radius-pill);
-    background: var(--warn);
-    color: var(--bg);
-    font-size: 0.75rem;
-    font-weight: 800;
+  .why strong {
+    color: var(--text);
+  }
+
+  a {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* Conflicts name both sides so readers know exactly what to reconcile. */
+  .conflict {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    padding: 0.85rem 1rem;
+    border-left: 3px solid var(--warn);
+    background: color-mix(in srgb, var(--warn) 8%, transparent);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .conflict-title {
+    font-weight: 700;
+  }
+
+  .conflict ul {
+    display: grid;
+    gap: 0.3rem;
+    margin: 0 0 0.35rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .conflict li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.5rem;
+    align-items: baseline;
+  }
+
+  .side-label {
+    font-weight: 700;
+  }
+
+  .side-label::after {
+    content: ':';
+  }
+
+  .conflict-item + .conflict-item {
+    padding-top: 0.75rem;
+    border-top: 1px solid color-mix(in srgb, var(--warn) 35%, var(--border));
+  }
+
+  .link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent);
+    font: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .nav,
@@ -767,22 +764,20 @@
 
   .nav {
     justify-content: space-between;
-    margin-top: 1.1rem;
+    margin-top: 1.5rem;
   }
 
   .btn {
     padding: 0.5rem 1rem;
     border: 1px solid var(--border-strong);
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     background: var(--surface-solid);
     color: var(--text);
     font: inherit;
     font-size: 0.9rem;
-    font-weight: 650;
+    font-weight: 600;
     cursor: pointer;
-    transition:
-      border-color var(--dur) var(--ease),
-      background-color var(--dur) var(--ease);
+    transition: border-color var(--dur) var(--ease);
   }
 
   .btn:hover:not(:disabled) {
@@ -790,8 +785,6 @@
   }
 
   .btn:disabled {
-    border-style: dashed;
-    background: transparent;
     color: var(--muted);
     cursor: default;
   }
@@ -802,56 +795,34 @@
     color: var(--on-accent);
   }
 
-  .context {
-    display: grid;
-    gap: 0.45rem;
-    align-content: start;
-    align-self: start;
-    padding: 1rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--surface);
-  }
-
-  .context p {
-    color: var(--muted);
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
-
-  a {
-    color: var(--accent);
-    font-size: 0.88rem;
-    font-weight: 650;
+  .steps button:focus-visible,
+  .btn:focus-visible,
+  .link:focus-visible,
+  .option input:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  a:focus-visible {
+    outline: 2px solid var(--accent-2);
+    outline-offset: 2px;
   }
 
   /* Review */
-  .review {
-    margin-top: 1.25rem;
-  }
-
-  .review-head {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem 1.5rem;
-    align-items: flex-end;
-    justify-content: space-between;
+  .status {
+    margin-top: 0.75rem;
+    font-size: 0.92rem;
+    line-height: 1.5;
   }
 
   table {
     width: 100%;
-    margin-top: 1rem;
-    border-collapse: separate;
-    border-spacing: 0;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--surface);
-    overflow: hidden;
+    margin-top: 1.25rem;
+    border-collapse: collapse;
   }
 
   th,
   td {
-    padding: 0.8rem 0.9rem;
+    padding: 0.85rem 0.75rem 0.85rem 0;
     border-top: 1px solid var(--border);
     text-align: left;
     vertical-align: top;
@@ -860,10 +831,8 @@
   thead th {
     border-top: 0;
     color: var(--muted);
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    font-size: 0.78rem;
+    font-weight: 700;
   }
 
   th[scope='row'] {
@@ -875,23 +844,25 @@
     font-size: 0.95rem;
   }
 
-  tr.is-open th[scope='row'] {
-    box-shadow: inset 3px 0 0 var(--warn);
+  tr.is-open th[scope='row'] b::before {
+    content: '';
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-right: 0.4rem;
+    border-radius: var(--radius-pill);
+    background: var(--warn);
+    vertical-align: 0.1em;
   }
 
   .impact {
-    display: inline-block;
-    margin-top: 0.35rem;
-    padding: 0.1rem 0.5rem;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-pill);
+    display: block;
+    margin-top: 0.25rem;
     color: var(--muted);
-    font-size: 0.72rem;
-    font-weight: 700;
+    font-size: 0.8rem;
   }
 
   .impact.fixed {
-    border-color: color-mix(in srgb, var(--warn) 70%, var(--border));
     color: var(--text);
   }
 
@@ -904,34 +875,23 @@
     display: block;
     margin-top: 0.35rem;
     color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 0.82rem;
+    font-size: 0.8rem;
   }
 
-  .choice small.tag {
-    font-family: var(--font-sans);
-    font-size: 0.75rem;
-    font-weight: 700;
-  }
-
-  .na {
-    margin-top: 0.5rem;
-    font-family: var(--font-sans);
-  }
-
-  .why {
+  .rationale {
     display: grid;
     gap: 0.4rem;
     font-size: 0.9rem;
     line-height: 1.5;
   }
 
-  .why .muted {
+  .muted {
     color: var(--muted);
   }
 
   .warn {
-    font-weight: 650;
+    padding-left: 0.6rem;
+    border-left: 3px solid var(--warn);
   }
 
   .notes {
@@ -945,27 +905,20 @@
     font-size: 0.88rem;
   }
 
+  .copy-note {
+    min-height: 1.4em;
+    margin-top: 0.5rem;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+
   .saved {
     margin-top: 1rem;
     color: var(--muted);
     font-size: 0.82rem;
   }
 
-  @container (max-width: 860px) {
-    .trail ol {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .step {
-      grid-template-columns: minmax(0, 1fr);
-    }
-  }
-
   @container (max-width: 640px) {
-    .trail ol {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
     table,
     tbody,
     tr,
@@ -979,17 +932,18 @@
       display: none;
     }
 
-    tr + tr {
-      border-top: 1px solid var(--border);
-    }
-
     th,
     td {
+      padding-right: 0;
       border-top: 0;
     }
 
+    tr {
+      border-top: 1px solid var(--border);
+    }
+
     td.choice,
-    td.why {
+    td.rationale {
       padding-top: 0;
     }
 
@@ -999,10 +953,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .bar span,
-    .stage,
-    .answer,
-    .mark,
     .btn {
       transition: none;
     }

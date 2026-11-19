@@ -16,7 +16,6 @@ updated: 2026-11-17
 
 import FactCards from '/src/components/FactCards.astro';
 import ArchitectureDecisions from '/src/components/architecture-decisions/ArchitectureDecisions.svelte';
-import { withBase } from '/src/lib/url';
 
 <FactCards
   cards={[
@@ -28,33 +27,3 @@ import { withBase } from '/src/lib/url';
 />
 
 <ArchitectureDecisions client:visible />
-
-## Hosting
-
-- **Enterprise Cloud** is hosted by GitHub, on GitHub.com or on your own GHE.com subdomain. **Enterprise Server** is an instance you run on premises or in a public cloud.
-- A GitHub Enterprise plan includes both, so you can use either or both. Moving work between them is a migration.
-- Needing data in a region isn’t on its own a reason to self-host, because Enterprise Cloud offers data residency.
-
-## Data residency
-
-- With data residency, the enterprise lives on a GHE.com subdomain in the EU, Australia, US, or Japan region. GitHub.com stores data in the USA by default.
-- You choose the region when you create the enterprise, and it can’t be reversed without a migration.
-- GHE.com requires Enterprise Managed Users and doesn’t allow public repositories.
-
-## Account model
-
-- **Personal accounts** belong to each person. You can link them to your identity provider (IdP) with SAML SSO to control access.
-- **Enterprise Managed Users** are created, named, and suspended by your IdP. They can’t create public content or contribute outside the enterprise, so people who do outside work need a second, personal account.
-- You choose the model before creating the enterprise. Switching later means migrating to a new enterprise account.
-
-## Identity provider and name
-
-- Managed users work with partner IdPs (Entra ID, Okta, and PingFederate) or another system that meets GitHub’s SAML 2.0 and SCIM 2.0 guidelines. With Entra ID, GitHub recommends OIDC.
-- Moving to a new IdP or tenant deletes SCIM identities, personal access tokens, SSH keys, and IdP group links, so users are provisioned again.
-- Managed usernames end in the enterprise shortcode, like `mona_acme`. On GHE.com, the subdomain, like `acme.ghe.com`, is chosen too. Neither can be changed later.
-
-## Enterprises and organizations
-
-- GitHub Well-Architected recommends one enterprise for all internal work. Use a separate enterprise only for a legal or regulatory boundary; see <a href={withBase('/github/enterprise-patterns/')}>enterprise patterns</a>.
-- Start with few organizations: one shared organization, a red-green-sandbox split for need-to-know work, or one per independent business unit. See the <a href={withBase('/github/account-enterprise-hierarchy/')}>enterprise hierarchy</a> for what each level holds.
-- Don’t map organizations to teams or the org chart. It’s easier to add organizations than to remove them, and moving repositories changes their paths.

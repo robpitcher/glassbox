@@ -4,36 +4,32 @@ export type QuestionId = 'hosting' | 'residency' | 'collaboration' | 'lifecycle'
 export type DecisionId = 'hosting' | 'residency' | 'identity' | 'idp' | 'name' | 'enterprises' | 'orgs';
 export type StageId = 'hosting' | 'residency' | 'identity' | 'name' | 'structure' | 'review';
 
-export interface Info {
-  lead: string;
-  text: string;
-}
-
 export interface Answer {
   id: string;
   label: string;
   detail: string;
-  info: Info;
 }
 
 export interface Question {
   id: QuestionId;
+  /** Short topic name, used when a conflict names this answer. */
+  label: string;
   stage: StageId;
   prompt: string;
   description: string;
   /** Empty for the free-text name question. */
   answers: Answer[];
-  info: Info;
   context: { title: string; text: string };
   doc: { label: string; href: string };
 }
 
 export const STORAGE_KEY = 'glassbox:architecture-decisions:v1';
 
-export const VISUAL = {
-  title: 'Decide the foundations',
-  description: 'Answer from your requirements. Each answer suggests a choice you can edit in the decision record.',
-  trailLabel: 'Decision trail',
+export const QUIZ = {
+  label: 'Architecture questionnaire',
+  intro: 'Answer from your requirements. Each answer suggests a choice you can edit in the decision record at the end.',
+  trailLabel: 'Progress',
+  whyLabel: 'Why it’s hard to change',
   back: 'Back',
   next: 'Continue',
   finish: 'See decision record',
@@ -61,14 +57,13 @@ export const STAGES: { id: StageId; label: string }[] = [
   { id: 'review', label: 'Review' },
 ];
 
-export const STAGE_EMPTY = 'To decide';
-export const STAGE_REVIEW = { pending: 'Not ready', ready: 'Decision record' };
 
 const UNKNOWN_DETAIL = 'Record it as undecided and find who owns the requirement.';
 
 export const QUESTIONS: Question[] = [
   {
     id: 'hosting',
+    label: 'Self-hosting',
     stage: 'hosting',
     prompt: 'Must you run GitHub on your own infrastructure?',
     description: 'Start from an operating requirement, not a product preference.',
@@ -77,22 +72,18 @@ export const QUESTIONS: Question[] = [
         id: 'cloud',
         label: 'No, GitHub can host it',
         detail: 'Suggests GitHub Enterprise Cloud, on GitHub.com or a regional GHE.com subdomain.',
-        info: { lead: 'GitHub Enterprise Cloud.', text: 'GitHub hosts the platform, so new features and fixes arrive without upgrades.' },
       },
       {
         id: 'server',
         label: 'Yes, we must operate the instance',
         detail: 'Suggests GitHub Enterprise Server, on premises or in your public cloud.',
-        info: { lead: 'GitHub Enterprise Server.', text: 'You run and upgrade your own instance, and create its user accounts.' },
       },
       {
         id: 'unknown',
         label: 'Not confirmed yet',
         detail: UNKNOWN_DETAIL,
-        info: { lead: 'Hosting stays undecided.', text: 'The next questions still apply to Cloud, so you can keep going.' },
       },
     ],
-    info: { lead: 'Hosting is a migration decision.', text: 'Data residency alone is not a reason to self-host: Cloud can store data in a chosen region.' },
     context: {
       title: 'One plan, two deployments',
       text: 'A GitHub Enterprise plan includes both Enterprise Cloud and Enterprise Server, and you can use either or both. Moving work between them is a migration, not a setting.',
@@ -101,6 +92,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 'residency',
+    label: 'Data residency',
     stage: 'residency',
     prompt: 'Must your code and data be stored in a specific region?',
     description: 'Ask your compliance or legal team, not just engineering.',
@@ -109,40 +101,33 @@ export const QUESTIONS: Question[] = [
         id: 'none',
         label: 'No regional requirement',
         detail: 'Suggests GitHub.com, which stores data in the USA by default.',
-        info: { lead: 'GitHub.com.', text: 'With no regional requirement, the enterprise can live on GitHub.com.' },
       },
       {
         id: 'eu',
         label: 'Yes, in the EU',
         detail: 'GHE.com in the EU region, which includes Norway and Switzerland.',
-        info: { lead: 'GHE.com, EU region.', text: 'Your enterprise gets its own GHE.com subdomain and must use managed users.' },
       },
       {
         id: 'australia',
         label: 'Yes, in Australia',
         detail: 'GHE.com in the Australia region.',
-        info: { lead: 'GHE.com, Australia region.', text: 'Your enterprise gets its own GHE.com subdomain and must use managed users.' },
       },
       {
         id: 'us',
         label: 'Yes, in the US',
         detail: 'GHE.com in the US region.',
-        info: { lead: 'GHE.com, US region.', text: 'Your enterprise gets its own GHE.com subdomain and must use managed users.' },
       },
       {
         id: 'japan',
         label: 'Yes, in Japan',
         detail: 'GHE.com in the Japan region.',
-        info: { lead: 'GHE.com, Japan region.', text: 'Your enterprise gets its own GHE.com subdomain and must use managed users.' },
       },
       {
         id: 'unknown',
         label: 'Not confirmed yet',
         detail: UNKNOWN_DETAIL,
-        info: { lead: 'Residency stays undecided.', text: 'Confirm it before creating the enterprise, because the region is chosen at signup.' },
       },
     ],
-    info: { lead: 'Residency narrows identity.', text: 'GHE.com requires Enterprise Managed Users, and you choose the region when the enterprise is created.' },
     context: {
       title: 'Chosen at creation',
       text: 'Data residency is picked when the enterprise is created and can’t be reversed without a migration. Review region availability and feature differences before you commit.',
@@ -151,6 +136,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 'collaboration',
+    label: 'Outside contributions',
     stage: 'identity',
     prompt: 'Do people need to contribute outside your enterprise?',
     description: 'Think of open source work, partner repositories, and public Pages or gists.',
@@ -159,28 +145,23 @@ export const QUESTIONS: Question[] = [
         id: 'same',
         label: 'Yes, with the same account they use for work',
         detail: 'Points to personal accounts. Managed users can only contribute inside the enterprise.',
-        info: { lead: 'Same account outside.', text: 'Managed users can read public repositories but can’t push, open issues, or open pull requests outside the enterprise.' },
       },
       {
         id: 'separate',
         label: 'Sometimes, and a separate personal account is fine',
         detail: 'Managed users work, with a second personal account for outside work.',
-        info: { lead: 'Two accounts.', text: 'People switch to a personal account for outside work, which managed users allow.' },
       },
       {
         id: 'internal',
         label: 'No, work stays inside the enterprise',
         detail: 'Managed users fit well.',
-        info: { lead: 'Internal work only.', text: 'Managed users’ restrictions on public content won’t get in the way.' },
       },
       {
         id: 'unknown',
         label: 'Not confirmed yet',
         detail: UNKNOWN_DETAIL,
-        info: { lead: 'Collaboration stays undecided.', text: 'Check with teams that publish open source before choosing an account model.' },
       },
     ],
-    info: { lead: 'Collaboration shapes the account model.', text: 'Managed user accounts can’t create public repositories or contribute outside the enterprise.' },
     context: {
       title: 'Account model is permanent',
       text: 'You pick personal accounts or managed users before creating the enterprise. Switching later means migrating to a new enterprise account.',
@@ -189,6 +170,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 'lifecycle',
+    label: 'Account ownership',
     stage: 'identity',
     prompt: 'Must your identity provider own the accounts?',
     description: 'That means creating, naming, and suspending each GitHub account from your IdP.',
@@ -197,22 +179,18 @@ export const QUESTIONS: Question[] = [
         id: 'idp',
         label: 'Yes, the IdP creates and removes accounts',
         detail: 'Points to Enterprise Managed Users, provisioned with SCIM.',
-        info: { lead: 'IdP-owned accounts.', text: 'With managed users, your IdP controls usernames, emails, and when accounts are suspended.' },
       },
       {
         id: 'access',
         label: 'No, we only need to control access',
         detail: 'Points to personal accounts, with optional SAML SSO.',
-        info: { lead: 'Access only.', text: 'People bring personal accounts, and SAML SSO links them to your IdP to grant access.' },
       },
       {
         id: 'unknown',
         label: 'Not confirmed yet',
         detail: UNKNOWN_DETAIL,
-        info: { lead: 'Account ownership stays undecided.', text: 'Personal accounts are simpler if you have no IdP onboarding process today.' },
       },
     ],
-    info: { lead: 'Who owns the account?', text: 'Managed users are provisioned from your IdP; personal accounts belong to each person.' },
     context: {
       title: 'Not interchangeable',
       text: 'Personal and managed accounts are different account types. Moving between them needs migration tools and a separate process for user history.',
@@ -221,6 +199,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 'idp',
+    label: 'Identity provider',
     stage: 'identity',
     prompt: 'Which identity provider will manage your users?',
     description: 'Managed users sign in and are provisioned only through this IdP.',
@@ -229,34 +208,28 @@ export const QUESTIONS: Question[] = [
         id: 'entra',
         label: 'Microsoft Entra ID',
         detail: 'A partner IdP. Use OIDC, which supports Conditional Access policies.',
-        info: { lead: 'Entra ID with OIDC.', text: 'GitHub recommends OIDC with Entra ID so your Conditional Access policies apply to GitHub.' },
       },
       {
         id: 'okta',
         label: 'Okta',
         detail: 'A partner IdP. Use SAML with SCIM.',
-        info: { lead: 'Okta with SAML.', text: 'Okta is a partner IdP for managed users, using SAML for sign-in and SCIM for provisioning.' },
       },
       {
         id: 'ping',
         label: 'PingFederate',
         detail: 'A partner IdP. Use SAML with SCIM.',
-        info: { lead: 'PingFederate with SAML.', text: 'PingFederate is a partner IdP for managed users, using SAML for sign-in and SCIM for provisioning.' },
       },
       {
         id: 'other',
         label: 'Another SAML 2.0 and SCIM 2.0 system',
         detail: 'Allowed if it meets GitHub’s integration guidelines.',
-        info: { lead: 'A non-partner IdP.', text: 'Check it against GitHub’s guidelines for SAML 2.0 and SCIM 2.0 before you commit.' },
       },
       {
         id: 'unknown',
         label: 'Not confirmed yet',
         detail: UNKNOWN_DETAIL,
-        info: { lead: 'IdP stays undecided.', text: 'Managed users can’t sign in until authentication and provisioning are configured.' },
       },
     ],
-    info: { lead: 'The IdP is hard to swap.', text: 'Moving to a new IdP or tenant deletes tokens, SSH keys, and IdP group links on GitHub.' },
     context: {
       title: 'Changing IdP is disruptive',
       text: 'To move to a new IdP or tenant, you disable and reconfigure authentication. GitHub deletes SCIM identities, personal access tokens, SSH keys, and IdP-linked groups, then users are provisioned again.',
@@ -265,11 +238,11 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 'name',
+    label: 'Enterprise name',
     stage: 'name',
     prompt: 'What short name will identify your enterprise?',
     description: 'Lowercase letters and numbers. Availability is checked when you sign up.',
     answers: [],
-    info: { lead: 'A name you can’t change.', text: 'Pick it with stakeholders now, because it can’t be modified after the enterprise exists.' },
     context: {
       title: 'Fixed at creation',
       text: 'Managed users get usernames that end in the enterprise shortcode. On GHE.com, you also choose a subdomain. Neither can be changed later.',
@@ -278,6 +251,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 'isolation',
+    label: 'Isolation',
     stage: 'structure',
     prompt: 'Must any part of the business be fully isolated?',
     description: 'For example a separate legal entity, or a regulated unit with its own administrators.',
@@ -286,22 +260,18 @@ export const QUESTIONS: Question[] = [
         id: 'none',
         label: 'No, one company and one set of policies',
         detail: 'Suggests one enterprise for all internal work.',
-        info: { lead: 'One enterprise.', text: 'Well-Architected recommends one enterprise account for all internal work.' },
       },
       {
         id: 'entity',
         label: 'Yes, a legal or regulatory boundary',
         detail: 'Suggests a separate enterprise for that entity.',
-        info: { lead: 'A separate enterprise.', text: 'Each enterprise has its own owners, policies, and bill, and nothing is shared between them.' },
       },
       {
         id: 'unknown',
         label: 'Not confirmed yet',
         detail: UNKNOWN_DETAIL,
-        info: { lead: 'Isolation stays undecided.', text: 'Default to one enterprise unless a legal or regulatory boundary requires another.' },
       },
     ],
-    info: { lead: 'Enterprises split identity and policy.', text: 'With managed users, someone who works in two enterprises needs two accounts.' },
     context: {
       title: 'Organizations separate work too',
       text: 'Most separation needs fit in organizations inside one enterprise. A second enterprise duplicates identity setup, owners, and policies.',
@@ -310,6 +280,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 'orgs',
+    label: 'Organization grouping',
     stage: 'structure',
     prompt: 'How should work be grouped into organizations?',
     description: 'Organizations are boundaries for collaboration and policy, not an org chart.',
@@ -318,34 +289,28 @@ export const QUESTIONS: Question[] = [
         id: 'shared',
         label: 'Most work is shared; a few repositories are need-to-know',
         detail: 'Suggests a single organization, with teams for access.',
-        info: { lead: 'Single organization.', text: 'Teams and repository permissions handle access, and an all-members team keeps innersource open.' },
       },
       {
         id: 'boundary',
         label: 'Need-to-know work needs its own boundary',
         detail: 'Suggests red, green, and sandbox organizations.',
-        info: { lead: 'Red-green-sandbox.', text: 'Shared work goes in green, need-to-know work in red, and experiments in a sandbox.' },
       },
       {
         id: 'units',
         label: 'Business units run independently',
         detail: 'Suggests one organization per top-level unit or portfolio company.',
-        info: { lead: 'One organization per unit.', text: 'Map organizations to stable top-level divisions or portfolio companies, not to teams.' },
       },
       {
         id: 'teams',
         label: 'Each team or department wants its own',
         detail: 'Well-Architected advises against this; teams are the better fit.',
-        info: { lead: 'Avoid an organization per team.', text: 'Reorganizations would force organization changes, so use teams within fewer organizations.' },
       },
       {
         id: 'unknown',
         label: 'Not confirmed yet',
         detail: UNKNOWN_DETAIL,
-        info: { lead: 'Structure stays undecided.', text: 'Start small: it’s easier to add organizations than to remove them.' },
       },
     ],
-    info: { lead: 'Start with few organizations.', text: 'Mentions and search work within one organization, and removing organizations later is harder than adding them.' },
     context: {
       title: 'Reorganizing has a cost',
       text: 'Moving repositories between organizations changes their owner/name paths, so integrations and links need updating.',
@@ -363,17 +328,11 @@ export const NAME = {
   shortcodePreview: (v: string) => `Usernames like mona_${v}`,
   subdomainPreview: (v: string) => `${v}.ghe.com`,
   invalid: 'Use lowercase letters and numbers only.',
-  answeredInfo: (v: string, subdomain: boolean): Info =>
-    subdomain
-      ? { lead: `${v}.ghe.com.`, text: 'You can’t change the subdomain later, so confirm it before signup.' }
-      : { lead: `Shortcode ${v}.`, text: `Managed users will be named like mona_${v}, and the shortcode can’t change later.` },
 };
 
 export interface ChoiceOption {
   id: string;
   label: string;
-  /** Compact label for the decision trail. */
-  short?: string;
 }
 
 export interface Decision {
@@ -400,8 +359,8 @@ export const DECISIONS: Decision[] = [
     label: 'Hosting',
     impact: 'Migration to change',
     options: [
-      { id: 'cloud', label: 'GitHub Enterprise Cloud', short: 'Cloud' },
-      { id: 'server', label: 'GitHub Enterprise Server', short: 'Server' },
+      { id: 'cloud', label: 'GitHub Enterprise Cloud' },
+      { id: 'server', label: 'GitHub Enterprise Server' },
       undecided,
     ],
     doc: DOCS.hosting,
@@ -412,7 +371,7 @@ export const DECISIONS: Decision[] = [
     impact: 'Migration to change',
     options: [
       { id: 'github', label: 'GitHub.com' },
-      ...Object.entries(REGIONS).map(([id, r]) => ({ id, label: `GHE.com, ${r} region`, short: `GHE.com ${r}` })),
+      ...Object.entries(REGIONS).map(([id, r]) => ({ id, label: `GHE.com, ${r} region` })),
       notApplicable,
       undecided,
     ],
@@ -423,9 +382,9 @@ export const DECISIONS: Decision[] = [
     label: 'Account model',
     impact: 'New enterprise to change',
     options: [
-      { id: 'emu', label: 'Enterprise Managed Users', short: 'Managed users' },
-      { id: 'personal', label: 'Personal accounts', short: 'Personal' },
-      { id: 'instance', label: 'Server instance accounts', short: 'Instance' },
+      { id: 'emu', label: 'Enterprise Managed Users' },
+      { id: 'personal', label: 'Personal accounts' },
+      { id: 'instance', label: 'Server instance accounts' },
       undecided,
     ],
     doc: DOCS.identity,
@@ -469,9 +428,9 @@ export const DECISIONS: Decision[] = [
     label: 'Organizations',
     impact: 'Easier to add than remove',
     options: [
-      { id: 'single', label: 'Single organization', short: 'One org' },
-      { id: 'red-green', label: 'Red, green, and sandbox', short: 'Red-green' },
-      { id: 'per-unit', label: 'One per business unit', short: 'Org per unit' },
+      { id: 'single', label: 'Single organization' },
+      { id: 'red-green', label: 'Red, green, and sandbox' },
+      { id: 'per-unit', label: 'One per business unit' },
       undecided,
     ],
     doc: DOCS.organize,
@@ -500,8 +459,6 @@ export const RATIONALE = {
     separate: 'People who contribute outside the enterprise use a separate personal account.',
     personal: 'You only need to control access, so people bring personal accounts. Add SAML SSO to tie access to your IdP.',
     personalOutside: 'People need the same account for work outside the enterprise, so they bring personal accounts. Add SAML SSO to tie access to your IdP.',
-    conflictResidency: 'Conflict: GHE.com requires managed users, but people must contribute outside the enterprise with the same account. Revisit one of these requirements.',
-    conflict: 'Conflict: you want your IdP to own accounts, but people must contribute outside with the same account. Managed users would need a second, personal account for outside work.',
     instance: 'On Enterprise Server, you create accounts on the instance, with built-in or external authentication.',
     undecided: 'Account ownership isn’t decided yet. Settle it before creating the enterprise, because switching means a new enterprise account.',
   },
@@ -537,11 +494,24 @@ export const RATIONALE = {
   override: (suggested: string) => `You changed this from the suggested ${suggested}.`,
 };
 
-/** Warnings when an edited choice contradicts another decision. */
+/** Why two answers or choices can't both hold. Each conflict also names both sides. */
 export const CONFLICTS = {
-  personalResidency: 'GHE.com requires Enterprise Managed Users.',
+  residencyCollab: 'GHE.com requires managed users, and managed users can’t contribute outside the enterprise.',
+  lifecycleCollab: 'IdP-owned accounts are managed users, and managed users can’t contribute outside the enterprise.',
+  personalResidency: 'GHE.com requires Enterprise Managed Users, not personal accounts.',
   serverResidency: 'Data residency applies to Enterprise Cloud on GHE.com, not to Enterprise Server.',
   serverEmu: 'Enterprise Managed Users is an Enterprise Cloud feature.',
+};
+
+export const CONFLICT_TEXT = {
+  title: 'Conflicting requirements',
+  answersBlock: 'The account model stays undecided until you change one of these answers.',
+  choicesBlock: 'Change one of these choices, or record why the conflict is acceptable.',
+  change: 'Change',
+  with: 'Conflicts with',
+  between: 'Conflicting answers:',
+  summary: (n: number) => `${n} conflict${n === 1 ? '' : 's'} to resolve`,
+  markdown: (sides: string) => `Conflict between ${sides}:`,
 };
 
 export const REVIEW = {
@@ -557,13 +527,10 @@ export const REVIEW = {
   copyFailed: 'Couldn’t copy. Your browser blocked clipboard access.',
   edit: 'Edit answers',
   reset: 'Start over',
-  info: (decided: number, total: number, open: number): Info =>
+  status: (decided: number, total: number, open: number) =>
     open
-      ? { lead: `${decided} of ${total} decisions set.`, text: `${open} still ${open === 1 ? 'needs' : 'need'} an owner or a resolved conflict before you create the enterprise.` }
-      : { lead: `All ${total} decisions set.`, text: 'Review them with your stakeholders: none of these are easy to change after the enterprise exists.' },
-  conflictPrefix: 'Conflict:',
+      ? `${decided} of ${total} decisions set. ${open} still ${open === 1 ? 'needs' : 'need'} an owner or a resolved conflict before you create the enterprise.`
+      : `All ${total} decisions set. Review them with your stakeholders: none of these are easy to change after the enterprise exists.`,
   markdownTitle: '## GitHub Enterprise architecture decisions',
   markdownHeader: ['Decision', 'Choice', 'Change impact', 'Rationale', 'Notes'],
 };
-
-export const CONFLICT_NOTICE = 'These requirements conflict. The account model will stay undecided until you revisit one of them.';

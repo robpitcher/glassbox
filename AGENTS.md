@@ -43,6 +43,7 @@ To add a new topic, follow the `new-topic` skill in `.github/skills/new-topic/SK
 - **Visual sections** are cards with a numbered badge, a short heading, and one line of explanation (see `HierarchyExplorer.svelte`).
 - **After the visual**, add short `##` sections with bulleted explanations. These must make sense without JavaScript, because they are the noninteractive version of the visual.
 - The layout puts the "Updated" date at the bottom, left-aligned. Don't move it.
+- **Exception:** the architecture decisions questionnaire (`github/architecture-decisions`) is a form, not a diagram. Keep its FactCards, but don't add a `.visual` card, `SectionHead`, `InfoBar`, or `##` sections after it.
 
 ## Visual design
 
