@@ -471,7 +471,7 @@
                     {/each}
                   </select>
                   {#if r.conflict}
-                    <small class="blocked" id="ad-clash-{d.id}"><strong>{CONFLICT_TEXT.blocked(r.conflict.by)}</strong> {r.conflict.reason}</small>
+                    <small class="blocked" id="ad-clash-{d.id}"><strong>{CONFLICT_TEXT.blocked(r.conflict.by)}</strong> <mark>{r.conflict.reason}</mark></small>
                   {:else if r.value === suggestedFor(d.id)}<small class="tag">{REVIEW.suggested}</small>{/if}
                 {/if}
               </td>
@@ -832,6 +832,14 @@
 
   .choice small.blocked {
     color: var(--text);
+  }
+
+  .choice small.blocked mark {
+    padding: 0 0.15em;
+    border-radius: 0.2em;
+    background: color-mix(in srgb, var(--warn) 32%, transparent);
+    color: inherit;
+    box-decoration-break: clone;
   }
 
   .rationale {
