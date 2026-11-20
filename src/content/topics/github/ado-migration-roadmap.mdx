@@ -32,7 +32,7 @@ import { withBase } from '/src/lib/url';
 ## What moves at each stage
 
 - **Stage 1: repositories.** GitHub Enterprise Importer moves `checkout`, `app`, and `docs` into `acme-web` with commit history, pull requests, work item links on pull requests, and repository branch policies. Azure Pipelines keeps building them through the Azure Pipelines app, which reports results as checks on pull requests. Azure Boards links commits and pull requests to work items through the Azure Boards app and `AB#123` mentions.
-- **Stage 2: CI/CD.** GitHub Actions Importer audits the pipelines and opens pull requests with converted workflows. Secrets, service connections, self-hosted agents, environments, and approvals need manual work. Workflows keep using the Azure Artifacts feeds until stage 3.
+- **Stage 2: CI/CD.** GitHub Actions Importer audits the pipelines and opens pull requests with converted workflows. Secrets, service connections, self-hosted agents, environments, and approvals need manual work. Existing scan tasks come along as workflow steps, and workflows keep using the Azure Artifacts feeds until stage 3.
 - **Stage 3: remaining engineering workflows.** Packages move to GitHub Packages, and security scanning moves to Dependabot, code scanning, and secret scanning. Azure Boards is the only Azure DevOps service left, still linked for planning and traceability.
 - **Stage 4 (optional): planning.** Work items move to GitHub Issues and Projects. There's no built-in importer, so teams script it. Many teams stay at stage 3 for good.
 - **The order is a default, not a rule.** Some teams move CI/CD in the same cutover as each repository, or turn on GitHub's security features right away, since GitHub Advanced Security for Azure DevOps only covers Azure Repos.

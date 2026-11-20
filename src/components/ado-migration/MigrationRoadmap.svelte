@@ -3,6 +3,7 @@
   import SectionHead from '../ui/SectionHead.svelte';
   import SegmentedToggle from '../ui/SegmentedToggle.svelte';
   import {
+    DEPENDS,
     LANES,
     SERVICES,
     SLOT_TEXT,
@@ -33,11 +34,20 @@
   /** Connected to the GitHub repositories: moved, or bridged by an app. */
   const joined = (s: Service) => s.id !== 'repos' && (onGh(s) || bridged(s));
 
+  /** Edges for this stage: every joined service to repos, plus the fixed service dependencies. */
+  const edges = $derived<[ServiceId, ServiceId][]>([
+    ...SERVICES.filter(joined).map((s): [ServiceId, ServiceId] => ['repos', s.id]),
+    ...DEPENDS,
+  ]);
+
   const lit = $derived.by(() => {
     if (!selected) return null;
-    const s = SERVICES.find((x) => x.id === selected)!;
-    if (s.id === 'repos') return new Set<ServiceId>(['repos', ...SERVICES.filter(joined).map((x) => x.id)]);
-    return new Set<ServiceId>(joined(s) ? [s.id, 'repos'] : [s.id]);
+    const set = new Set<ServiceId>([selected]);
+    for (const [a, b] of edges) {
+      if (a === selected) set.add(b);
+      if (b === selected) set.add(a);
+    }
+    return set;
   });
 
   const info = $derived(selected ? stage.info[selected] : { lead: stage.lead, text: stage.text });
@@ -51,7 +61,12 @@
     selected = null;
   };
 
-  const tag = (s: Service) => (s.moves !== stageId ? null : s.optional ? TAGS.optional : TAGS.now);
+  const switched = (s: Service) => !!s.switches && Number(stageId) >= Number(s.switches.at);
+  const side = (s: Service) => (switched(s) ? s.switches!.gh : onGh(s) ? s.gh : s.ado);
+  const tag = (s: Service) =>
+    s.switches?.at === stageId ? TAGS.switch : s.moves !== stageId ? null : s.optional ? TAGS.optional : TAGS.now;
+  const sub = (s: Service) =>
+    s.switches?.at === stageId ? s.switches.handoff : s.moves === stageId ? s.handoff : side(s).sub;
 </script>
 
 <section class="visual" aria-labelledby="adm-title" onkeydown={(e) => e.key === 'Escape' && clear()}>
@@ -74,7 +89,6 @@
 
     {#each SERVICES as s (s.id)}
       {@const gh = onGh(s)}
-      {@const side = gh ? s.gh : s.ado}
       {@const t = tag(s)}
       <div class="row">
         <button
@@ -86,8 +100,8 @@
         >
           <span class="kind">{s.kind}</span>
           {#if t}<span class="tag">{t}</span>{/if}
-          <b>{side.name}</b>
-          <small>{t ? s.handoff : side.sub}</small>
+          <b>{side(s).name}</b>
+          <small>{sub(s)}</small>
         </button>
 
         {#if bridged(s) && s.bridge}

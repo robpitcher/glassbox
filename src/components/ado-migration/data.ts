@@ -38,6 +38,8 @@ export interface Service {
   bridge?: { app: string; surface: string };
   /** Moving it is optional, so its Azure DevOps slot offers to keep it. */
   optional?: boolean;
+  /** A later stage that swaps it for a GitHub-native product without changing lanes. */
+  switches?: { at: StageId; gh: Side; handoff: string };
 }
 
 export const SERVICES: Service[] = [
@@ -70,9 +72,14 @@ export const SERVICES: Service[] = [
     id: 'security',
     kind: 'Security',
     ado: { name: 'Current scanners', sub: 'Scan tasks in pipelines' },
-    gh: { name: 'GitHub security', sub: 'Dependabot, code and secret scanning' },
-    moves: '3',
-    handoff: 'Turned on across acme-web',
+    gh: { name: 'Current scanners', sub: 'Scan steps in workflows' },
+    moves: '2',
+    handoff: 'Converted with the pipelines',
+    switches: {
+      at: '3',
+      gh: { name: 'GitHub security', sub: 'Dependabot, code and secret scanning' },
+      handoff: 'Switched to GitHub’s own scanning',
+    },
   },
   {
     id: 'boards',
@@ -93,7 +100,17 @@ export const SLOT_TEXT = {
   via: 'via',
 };
 
-export const TAGS = { now: 'Moves now', optional: 'Optional' };
+export const TAGS = { now: 'Moves now', switch: 'Switches now', optional: 'Optional' };
+
+/**
+ * Service-to-service dependencies that hold at every stage, whichever lane each side is in:
+ * pipelines publish to and restore from the package feeds, and security scans run as pipeline steps.
+ * Every service joined to the repositories (moved, or bridged by an app) also links to `repos`.
+ */
+export const DEPENDS: [ServiceId, ServiceId][] = [
+  ['pipelines', 'packages'],
+  ['pipelines', 'security'],
+];
 
 export interface Info {
   lead: string;
