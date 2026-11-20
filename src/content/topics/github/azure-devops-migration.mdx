@@ -1,0 +1,65 @@
+---
+title: "Azure DevOps migration"
+shortTitle: "Azure DevOps migration"
+navTitle: "Azure DevOps migration"
+category: "GitHub"
+summary: "Move code, CI/CD, and workflows in safe stages while systems stay connected."
+order: 112
+art: "migration"
+breadcrumb:
+  - "GitHub"
+  - "Enterprise Cloud"
+  - "Azure DevOps migration"
+updated: 2026-11-20
+---
+
+import FactCards from '/src/components/FactCards.astro';
+import MigrationRoadmap from '/src/components/migration/MigrationRoadmap.svelte';
+import { withBase } from '/src/lib/url';
+
+<FactCards
+  cards={[
+    { label: 'First system moved', value: 'repositories' },
+    { label: 'Hybrid bridge', value: 'Boards + Pipelines' },
+    { label: 'Roadmap stages', value: '4, last optional' },
+    { label: 'Example', value: 'Acme enterprise' },
+  ]}
+/>
+
+<MigrationRoadmap client:visible />
+
+## Stage 1: Repositories
+
+- **What changes.** Acme uses GitHub Enterprise Importer to move `checkout`, `app`, and `docs` into GitHub, then validates the migrated repositories before teams switch remotes and release paths.
+- **What stays.** Azure Boards remains the planning system, Azure Pipelines can build repositories hosted on GitHub, and package or security workflows that still depend on Azure DevOps remain in place.
+- **Handoff.** Connect the Azure Boards app and its repositories so commits, branches, pull requests, and GitHub issues can link to work items; keep enough Azure Pipelines coverage to prove the new repository location works.
+- **Readiness.** Trial migrations, repository inventory, file and LFS checks, branch rules, permissions, and a cutover window matter more than moving the largest repository first.
+
+## Stage 2: CI/CD
+
+- **What changes.** GitHub Actions becomes the system of record for build and deployment workflows. GitHub Actions Importer can help draft conversions, but generated workflows still need review.
+- **What stays.** Azure Boards remains the planning system, and existing package feeds or other service dependencies can stay connected while their consumers cut over.
+- **Handoff.** Recreate the behavior behind runners, secrets, environments, service connections, approvals, schedules, and external triggers; parallel runs can compare outputs before the old pipeline is retired.
+- **Tradeoff.** A hybrid pipeline estate can reduce cutover risk, but it temporarily leaves builds, audit history, and credentials split across two platforms.
+
+## Stage 3: Remaining workflows
+
+- **What changes.** Applicable package publishing and security workflows move to GitHub, close to the repositories and Actions workflows they support.
+- **What stays.** Azure Boards can remain the planning system of record and keep linked traceability to GitHub work.
+- **Handoff.** Update every package producer and consumer, validate retention and access, and verify that code, dependency, secret, and policy workflows have owners and response paths.
+- **Practical finish.** Many organizations can stop here. Moving planning is an independent product and process decision, not a prerequisite for using GitHub for engineering.
+
+## Stage 4: Planning, optionally
+
+- **What changes.** Teams that are ready can use GitHub Issues and Projects for planning, bringing issues, pull requests, and delivery into one workflow.
+- **What stays optional.** Azure Boards can remain linked indefinitely when its hierarchy, reporting, compliance, or cross-team process is still the better fit.
+- **Handoff.** Validate work-item mappings, links, custom fields, automation, history, reporting, and integrations before moving active planning. Keep any links that external tools need.
+- **Sequence.** Different teams can take Stage 4 at different times; the roadmap does not require a single all-GitHub date.
+
+## Cross-cutting checks
+
+- **Identity and access.** Decide how users, groups, SSO, team membership, repository permissions, service accounts, and migration tokens map between the platforms. Treat migration access as temporary and review it after cutover; the <a href={withBase('/github/account-enterprise-hierarchy/')}>enterprise hierarchy</a> explains the GitHub ownership and access model.
+- **History.** Inventory what the importer will carry, what must be recreated, and what stays only as an archive. Large files, Git LFS objects, links, attachments, and external references need explicit validation.
+- **Work-item links.** Link syntax and direction matter. Test the Azure Boards connection with representative commits, branches, pull requests, issues, and already-linked work items before retiring the old code location.
+- **Pipeline dependencies.** Inventory self-hosted agents, task versions, extensions, variable groups, secret stores, gates, packages, release triggers, and downstream services before converting a pipeline.
+- **Cutover evidence.** Keep a repository-level checklist for identity, history, links, builds, releases, package consumers, security checks, and rollback so every handoff has an owner and a proof point.
