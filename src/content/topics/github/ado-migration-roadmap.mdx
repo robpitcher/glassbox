@@ -1,0 +1,45 @@
+---
+title: "Azure DevOps migration roadmap"
+shortTitle: "Azure DevOps to GitHub roadmap"
+navTitle: "Azure DevOps migration"
+category: "GitHub"
+summary: "Move repos, then CI/CD, then the rest, with Azure Boards linked along the way."
+order: 112
+badge: "New"
+art: "ado-migration"
+breadcrumb:
+  - "GitHub"
+  - "Migrations"
+  - "Azure DevOps roadmap"
+updated: 2026-11-19
+---
+
+import FactCards from '/src/components/FactCards.astro';
+import MigrationRoadmap from '/src/components/ado-migration/MigrationRoadmap.svelte';
+import { withBase } from '/src/lib/url';
+
+<FactCards
+  cards={[
+    { label: 'Stage 1 moves', value: 'repositories' },
+    { label: 'Stage 2 moves', value: 'CI/CD' },
+    { label: 'Stage 3 moves', value: 'packages & security' },
+    { label: 'Stage 4 is', value: 'optional' },
+  ]}
+/>
+
+<MigrationRoadmap client:visible />
+
+## What moves at each stage
+
+- **Stage 1: repositories.** GitHub Enterprise Importer moves `checkout`, `app`, and `docs` into `acme-web` with commit history, pull requests, work item links on pull requests, and repository branch policies. Azure Pipelines keeps building them through the Azure Pipelines app, which reports results as checks on pull requests. Azure Boards links commits and pull requests to work items through the Azure Boards app and `AB#123` mentions.
+- **Stage 2: CI/CD.** GitHub Actions Importer audits the pipelines and opens pull requests with converted workflows. Secrets, service connections, self-hosted agents, environments, and approvals need manual work. Existing scan tasks come along as workflow steps, and workflows keep using the Azure Artifacts feeds until stage 3.
+- **Stage 3: remaining engineering workflows.** Packages move to GitHub Packages, and security scanning moves to Dependabot, code scanning, and secret scanning. Azure Boards is the only Azure DevOps service left, still linked for planning and traceability.
+- **Stage 4 (optional): planning.** Work items move to GitHub Issues and Projects. There's no built-in importer, so teams script it. Many teams stay at stage 3 for good.
+- **The order is a default, not a rule.** Some teams move CI/CD in the same cutover as each repository, or turn on GitHub's security features right away, since GitHub Advanced Security for Azure DevOps only covers Azure Repos.
+
+## Before you plan
+
+- **Identity and access.** Decide whether the enterprise uses managed users before you create it (see <a href={withBase('/github/account-enterprise-hierarchy/')}>enterprise hierarchy</a>). The importer doesn't migrate repository access, so re-create team access in GitHub. Imported activity belongs to placeholder mannequins until you reclaim them for real members. Commits keep their original author emails and aren't mannequins.
+- **History.** Each repository migrates once. There are no delta migrations, so plan a cutover window. Git LFS objects and pipelines don't move with the repository, and the importer only supports Azure DevOps Services, not Azure DevOps Server.
+- **Work-item links.** Links from pull requests to work items migrate. Afterward, `AB#` mentions in commit messages and in pull request or issue descriptions create new links. Connect each GitHub repository to only one Azure DevOps organization, because work item IDs aren't unique across organizations.
+- **Pipeline dependencies.** In stage 1, each pipeline must be rewired to its GitHub repository. In stage 2, anything that reads from Azure Artifacts, uses a service connection, or runs on a self-hosted agent needs a GitHub equivalent before you turn off the old pipeline.
