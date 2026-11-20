@@ -1,0 +1,97 @@
+<div class="migration-art" aria-hidden="true">
+  <div class="source">
+    <span class="source-label"></span>
+    <span class="service service--stay"></span>
+    <span class="service service--stay"></span>
+  </div>
+  <div class="bridge">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+  <div class="destination">
+    <span class="destination-label"></span>
+    <span class="service service--moved"></span>
+    <span class="service service--moved"></span>
+    <span class="service service--next"></span>
+  </div>
+</div>
+
+<style>
+  .migration-art {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 3rem minmax(0, 1fr);
+    align-items: center;
+    width: min(100%, 300px);
+    height: 120px;
+    padding: 10px 14px;
+  }
+
+  .source,
+  .destination {
+    display: grid;
+    gap: 7px;
+    padding: 10px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+
+  .destination {
+    border-color: color-mix(in srgb, var(--cc-4) 62%, var(--border));
+  }
+
+  .source-label,
+  .destination-label {
+    display: block;
+    width: 58%;
+    height: 8px;
+    border-radius: 4px;
+  }
+
+  .source-label {
+    background: var(--cc-1);
+  }
+
+  .destination-label {
+    background: var(--cc-4);
+  }
+
+  .service {
+    display: block;
+    height: 18px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+  }
+
+  .service--stay {
+    border-color: color-mix(in srgb, var(--cc-1) 45%, transparent);
+    background: color-mix(in srgb, var(--cc-1) 12%, var(--surface-solid));
+  }
+
+  .service--moved {
+    border-color: color-mix(in srgb, var(--cc-4) 52%, transparent);
+    background: color-mix(in srgb, var(--cc-4) 13%, var(--surface-solid));
+  }
+
+  .service--next {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .bridge {
+    display: grid;
+    align-content: center;
+    gap: 11px;
+  }
+
+  .bridge span {
+    height: 2px;
+    background: linear-gradient(90deg, var(--cc-1), var(--cc-4));
+  }
+
+  .bridge span:last-child {
+    transform: scaleX(0.55);
+    transform-origin: center;
+  }
+</style>
